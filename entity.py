@@ -145,6 +145,8 @@ def cmd(*args):
     cmd_spec = {}
     cmd_spec['cmd'] = ' '.join(args)
     v = Scheduler.current
+    if v.cwd:
+        cmd_spec['dir'] = v.cwd
     JobEngine.push_cmd(v, cmd_spec)
     yield from Scheduler.sleep()
     exitcode = cmd_spec['exitcode']
@@ -152,4 +154,6 @@ def cmd(*args):
         errmsg = cmd_spec['errmsg'] + (" with exitcode {}".format(exitcode))
         raise Exception(errmsg)
 
-
+def dir(p):
+    v = Scheduler.current
+    v.cwd = p

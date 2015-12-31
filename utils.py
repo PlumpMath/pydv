@@ -5,6 +5,9 @@ included_files = set()
 
 ns = globals()
 
+def get_ns():
+    return ns
+
 def require(file):
     """read in files"""
     if path.isabs(file):

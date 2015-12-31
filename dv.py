@@ -11,7 +11,9 @@ from gcfengine import GCFEngine
 from threading import Thread
 import asyncio
 import signal
-from utils import require
+from types import GeneratorType
+from utils import require, get_ns
+from option import args_parse
 
 server_p = None
 
@@ -49,6 +51,17 @@ def main():
         JobEngine.connect(in_q, out_q)
 
         require('loader')
+
+        (opts, args) = args_parse()
+
+        if opts.expr:
+            for e in opts.expr:
+                @visitor
+                def body(ee=e):
+                   res = eval(ee, get_ns(), get_ns())
+                   if type(res) == GeneratorType:
+                       yield from res
+                   return res
 
         while True:
             JobEngine.run()

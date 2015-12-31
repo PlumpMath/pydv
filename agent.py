@@ -113,12 +113,11 @@ server_thread = None
 def cleanup():
     if inferior_process:
         inferior_process.terminate()
-    if server_thread:
-        server_thread.terminate()
+    #if server_thread:
+    #    server_thread.terminate()
 
 def handler(signum, frame):
-    if inferior_process:
-        inferior_process.terminate()
+    cleanup()
     exit(-1)
 
 #signal.signal(signal.SIGINT, handler)

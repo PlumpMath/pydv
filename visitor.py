@@ -20,6 +20,7 @@ class Visitor:
         self.waiters = set()
         self.done = False
         self.initialized = False
+        self.cwd = None
         Scheduler.add(self)
         
     def __call__(self, *args, **kargs):
