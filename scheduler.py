@@ -27,3 +27,6 @@ class Scheduler:
             v = cls.running_q.pop()
             v.resume()
 
+    @classmethod
+    def is_waiting(cls):
+        return len(cls.running_q) > 0

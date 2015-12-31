@@ -13,18 +13,18 @@ class AgentServerProtocal(asyncio.Protocol):
 
     def data_received(self, data):
         message = marshal.loads(data)
-        print(message)
+        #print(message)
         out_q.put(message)
         #self.transport.close()
 
-def start_agent_server(loop, _out_q, _in_q):
+def start_agent_server(_out_q, _in_q):
 
     global in_q, out_q
 
     in_q = _in_q
     out_q = _out_q
     
-    #loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop()
 
     server_host = socket.gethostname()
     server_ip = socket.gethostbyname(server_host)

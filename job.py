@@ -84,7 +84,8 @@ class JobEngine:
     @classmethod
     def is_waiting(cls):
         return (len(cls.running_cmds) > 0 or
-                len(cls.pending_cmds) > 0)
+                len(cls.pending_cmds) > 0 or
+                len(cls.cmds) > 0)
 
     def require_cmd(cls, data):
         agent_id = data['agent_id']
@@ -95,7 +96,8 @@ class JobEngine:
             cmd_spec = cls.pending_cmds[agent_id]
             del cls.pending_cmds[agent_id]
             cls.running_cmds[agent_id] = cmd_spec
-        
+       
+        print(cmd_spec)
         out_data = marshal.dumps(cmd_spec)
         re_try = 10
         while True:

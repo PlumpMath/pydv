@@ -16,15 +16,15 @@ from utils import require
 server_p = None
 
 def cleanup():
-    #if server_p:
-    #    server_p.terminate()
+    if server_p:
+        server_p.terminate()
     JobEngine.cleanup()
 
 def handler(signum, frame):
     cleanup() 
     exit(-1) 
 
-signal.signal(signal.SIGINT, handler)
+#signal.signal(signal.SIGINT, handler)
 #signal.signal(signal.SIGTERM, handler)
 
 def main():
@@ -34,9 +34,9 @@ def main():
     in_q  = Queue()
     out_q = Queue()
 
-    loop = asyncio.get_event_loop()
-    #server_p = Process(target=start_agent_server, args=(in_q, out_q,))
-    server_p = Thread(target=start_agent_server, args=(loop, in_q, out_q,))
+    #loop = asyncio.get_event_loop()
+    server_p = Process(target=start_agent_server, args=(in_q, out_q,))
+    #server_p = Thread(target=start_agent_server, args=(loop, in_q, out_q,))
     server_p.start()
 
     try:
@@ -51,14 +51,12 @@ def main():
         require('loader')
 
         while True:
-            Scheduler.run()
             JobEngine.run()
             Scheduler.run()
-            #if JobEngine.is_waiting():
-            #    m = in_q.get()
-            #    in_q.put(m)
-            #else:
-            #    break
+            if JobEngine.is_waiting() or Scheduler.is_waiting():
+                next
+            else:
+                break
     finally:        
         cleanup()
 

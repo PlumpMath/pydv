@@ -1,9 +1,10 @@
 from optparse import OptionParser
 import socket
 from threading import Timer, Thread
+from multiprocessing import Process, Queue
 import marshal
 import asyncio
-from queue import Queue
+#from queue import Queue
 import os
 from subprocess import Popen, PIPE
 import shlex
@@ -59,11 +60,9 @@ class AgentProtocal(asyncio.Protocol):
 server_host = None
 server_port = None
 
-def start_server(loop):
+def start_server(cmd_q):
     
-    global server_host, server_port
-    
-    #loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop()
 
     server_host = socket.gethostname()
     server_ip = socket.gethostbyname(server_host)
@@ -73,7 +72,7 @@ def start_server(loop):
 
     _, server_port = server.sockets[0].getsockname()
 
-    cmd_q.put(True)
+    cmd_q.put((server_host, server_port))
     
     loop.run_forever()
 
@@ -112,27 +111,28 @@ server_thread = None
 def cleanup():
     if inferior_process:
         inferior_process.terminate()
-    #if server_thread:
-    #    server_thread.kill()
+    if server_thread:
+        server_thread.terminate()
 
 def handler(signum, frame):
     if inferior_process:
         inferior_process.terminate()
     exit(-1)
 
-signal.signal(signal.SIGINT, handler)
-signal.signal(signal.SIGTERM, handler)
+#signal.signal(signal.SIGINT, handler)
+#signal.signal(signal.SIGTERM, handler)
  
 def run():
     global inferior_process
     global server_thread
+    global server_host
+    global server_port
 
     Timer(time_out, send_heart_beat).start()
 
-    loop = asyncio.get_event_loop()
-    server_thread = Thread(target=start_server, args=(loop,)).start()
+    server_thread = Process(target=start_server, args=(cmd_q,)).start()
 
-    cmd_q.get()
+    server_host, server_port = cmd_q.get()
 
     cwd = os.getcwd()
     
