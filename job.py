@@ -85,7 +85,9 @@ class JobEngine:
     def is_waiting(cls):
         return (len(cls.running_cmds) > 0 or
                 len(cls.pending_cmds) > 0 or
-                len(cls.cmds) > 0)
+                len(cls.cmds) > 0 or
+                len(cls.agent_visitor) > 0 or
+                len(cls.visitor_agent) > 0)
 
     def require_cmd(cls, data):
         agent_id = data['agent_id']
@@ -97,7 +99,6 @@ class JobEngine:
             del cls.pending_cmds[agent_id]
             cls.running_cmds[agent_id] = cmd_spec
        
-        print(cmd_spec)
         out_data = marshal.dumps(cmd_spec)
         re_try = 10
         while True:
@@ -119,7 +120,7 @@ class JobEngine:
 
         if agent_id not in cls.running_cmds:
             if agent_id in cls.agent_visitor:
-                #GCFEngine.kill_agent(agent_id)
+                GCFEngine.kill_agent(agent_id)
                 v = cls.agent_visitor[agent_id]
                 del cls.agent_visitor[agent_id]
                 del cls.visitor_agent[v]

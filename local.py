@@ -11,7 +11,7 @@ class Local:
 
     def spawn_agent(self, agent_id):
         d = path.dirname(__file__)
-        cmd = "python3.4 {}/agent.py -m {} -p {} -i {}".format(d, self.host, self.port, agent_id)
+        cmd = "{}/agent.py -m {} -p {} -i {}".format(d, self.host, self.port, agent_id)
         args = shlex.split(cmd)
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         self.agent_ids[agent_id] = p

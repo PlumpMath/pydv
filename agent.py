@@ -1,10 +1,12 @@
+#!/usr/bin/env python3.4
+
 from optparse import OptionParser
 import socket
 from threading import Timer, Thread
-from multiprocessing import Process, Queue
+#from multiprocessing import Process, Queue
 import marshal
 import asyncio
-#from queue import Queue
+from queue import Queue
 import os
 from subprocess import Popen, PIPE
 import shlex
@@ -60,9 +62,9 @@ class AgentProtocal(asyncio.Protocol):
 server_host = None
 server_port = None
 
-def start_server(cmd_q):
+def start_server(loop):
     
-    loop = asyncio.get_event_loop()
+    #loop = asyncio.get_event_loop()
 
     server_host = socket.gethostname()
     server_ip = socket.gethostbyname(server_host)
@@ -130,7 +132,8 @@ def run():
 
     Timer(time_out, send_heart_beat).start()
 
-    server_thread = Process(target=start_server, args=(cmd_q,)).start()
+    loop = asyncio.get_event_loop()
+    server_thread = Thread(target=start_server, args=(loop,)).start()
 
     server_host, server_port = cmd_q.get()
 
@@ -140,6 +143,7 @@ def run():
         try:
             os.chdir(cwd)
             cmd_spec = get_cmd()
+            send_status(cmd_spec)
             if not cmd_spec:
                 next
             cmd = cmd_spec['cmd']
