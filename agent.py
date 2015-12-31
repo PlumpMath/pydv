@@ -151,6 +151,10 @@ def run():
                 break
             if 'dir' in cmd_spec:
                 path = cmd_spec['dir']
+                try:
+                    os.makedirs(path)
+                except Exception as e:
+                    pass
                 os.chdir(path)
             args = shlex.split(cmd)
             p = Popen(args, shell=True, stdout=PIPE, stderr=PIPE)
