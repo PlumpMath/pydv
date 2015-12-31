@@ -33,6 +33,8 @@ def main():
 
     global server_p
 
+    (opts, args) = args_parse()
+
     in_q  = Queue()
     out_q = Queue()
 
@@ -51,8 +53,6 @@ def main():
         JobEngine.connect(in_q, out_q)
 
         require('loader')
-
-        (opts, args) = args_parse()
 
         if opts.expr:
             for e in opts.expr:
