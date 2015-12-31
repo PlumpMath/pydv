@@ -75,42 +75,49 @@ class JobEngine:
         while cls.input_q.qsize() > 0:
             msg = cls.input_q.get()
             cmd = msg['cmd']
-            cases = {'heart_beat' : cls.heart_beart,
-                     'require_cmd' : cls.require_cmd,
+            cases = {'heart_beat'    : cls.heart_beart,
+                     'require_cmd'   : cls.require_cmd,
                      'update_status' : cls.update_status,
-                     'cmd_done' : cls.cmd_done}
+                     'cmd_done'      : cls.cmd_done}
             cases[cmd](cls, msg)
 
+    @classmethod
+    def is_waiting(cls):
+        return (len(cls.running_cmds) > 0 or
+                len(cls.pending_cmds) > 0)
+
     def require_cmd(cls, data):
-        #print(data)
         agent_id = data['agent_id']
         agent_host = data['agent_host']
         agent_port = data['agent_port']
+        cmd_spec = {'cmd' : 'terminate'}
         if agent_id in cls.pending_cmds:
             cmd_spec = cls.pending_cmds[agent_id]
             del cls.pending_cmds[agent_id]
             cls.running_cmds[agent_id] = cmd_spec
-            out_data = marshal.dumps(cmd_spec)
-            re_try = 10
-            while True:
+        
+        out_data = marshal.dumps(cmd_spec)
+        re_try = 10
+        while True:
+            try:
+                s = socket.socket()
+                s.connect((agent_host, agent_port))
                 try:
-                    s = socket.socket()
-                    s.connect((agent_host, agent_port))
-                    try:
-                        s.send(out_data)
-                    finally:
-                        s.close()
-                    break
-                except Exception as e:
-                    re_try -= 1
-                    print(e)
-                    if re_try > 0:
-                        pass
-                    else:
-                        raise e
-        else:
+                    s.send(out_data)
+                finally:
+                    s.close()
+                break
+            except Exception as e:
+                re_try -= 1
+                print(e)
+                if re_try > 0:
+                    pass
+                else:
+                    raise e
+
+        if agent_id not in cls.running_cmds:
             if agent_id in cls.agent_visitor:
-                GCFEngine.kill_agent(agent_id)
+                #GCFEngine.kill_agent(agent_id)
                 v = cls.agent_visitor[agent_id]
                 del cls.agent_visitor[agent_id]
                 del cls.visitor_agent[v]
@@ -127,7 +134,7 @@ class JobEngine:
         agent_id = data['agent_id']
         cmd_spec = cls.running_cmds[agent_id]
         cmd_spec['exitcode'] = data['exitcode']
-        cmd_spec['errmsg'] = data['errmsg']
+        cmd_spec['errmsg']   = data['errmsg']
         del cls.running_cmds[agent_id]
         Scheduler.wake(cls.agent_visitor[agent_id])
         

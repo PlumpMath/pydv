@@ -42,19 +42,7 @@ def send_heart_beat():
     data = {'cmd' : 'heart_beat',
             'agent_id' : agent_id}
     bs = marshal.dumps(data)
-    re_try = 10
-    while True:
-        try:
-            talk_to_server(bs)
-            break
-        except Exception as e:
-            re_try -= 1
-            print(str(e))
-            if re_try > 0:
-                pass
-            else:
-                cleanup()
-                exit(-1)
+    talk_to_server(bs)
     Timer(time_out, send_heart_beat).start()
     
 
@@ -70,6 +58,7 @@ class AgentProtocal(asyncio.Protocol):
 
 server_host = None
 server_port = None
+
 def start_server(loop):
     
     global server_host, server_port
@@ -151,7 +140,6 @@ def run():
         try:
             os.chdir(cwd)
             cmd_spec = get_cmd()
-            print(cmd_spec)
             if not cmd_spec:
                 next
             cmd = cmd_spec['cmd']
@@ -164,7 +152,6 @@ def run():
             p = Popen(args, shell=True, stdout=PIPE, stderr=PIPE)
             inferior_process = p
             out, err = p.communicate()
-            print((out, err))
             exitcode = p.returncode
             cmd_done(exitcode, err.decode())
         except Exception as e:

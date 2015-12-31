@@ -13,8 +13,7 @@ class Local:
         d = path.dirname(__file__)
         cmd = "python3.4 {}/agent.py -m {} -p {} -i {}".format(d, self.host, self.port, agent_id)
         args = shlex.split(cmd)
-        p = Popen(args, shell=True, stdout=PIPE, stderr=PIPE)
-        print(cmd)
+        p = Popen(args, stdout=PIPE, stderr=PIPE)
         self.agent_ids[agent_id] = p
 
     def kill_agent(self, agent_id):

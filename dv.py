@@ -38,8 +38,10 @@ def main():
     #server_p = Process(target=start_agent_server, args=(in_q, out_q,))
     server_p = Thread(target=start_agent_server, args=(loop, in_q, out_q,))
     server_p.start()
+
     try:
         host, port = in_q.get()
+
         print("agent server start on {}:{}".format(host, port))
     
         GCFEngine.set_imp(Local(host, port))
@@ -49,13 +51,14 @@ def main():
         require('loader')
 
         while True:
+            Scheduler.run()
             JobEngine.run()
             Scheduler.run()
-            if len(JobEngine.running_cmds) > 0 or len(JobEngine.pending_cmds) > 0:
-                m = in_q.get()
-                in_q.put(m)
-            else:
-                break
+            #if JobEngine.is_waiting():
+            #    m = in_q.get()
+            #    in_q.put(m)
+            #else:
+            #    break
     finally:        
         cleanup()
 
