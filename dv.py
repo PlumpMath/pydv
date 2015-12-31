@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.4
+
 from multiprocessing import Process, Queue
 from server import start_agent_server
 from job import JobEngine
@@ -8,69 +10,54 @@ from local import Local
 from gcfengine import GCFEngine
 from threading import Thread
 import asyncio
+import signal
+from utils import require
 
-@entity()
-def foo3(self):
-    @action(self)
-    def build():
-        print('foo3')
-        yield from cmd("dir")
+server_p = None
 
-@entity()
-def foo(self):
-    self.need(foo3())
-    @action(self)
-    def build():
-        print('foo')
-        yield from cmd('dir')
+def cleanup():
+    #if server_p:
+    #    server_p.terminate()
+    JobEngine.cleanup()
 
-@entity()
-def foo2(self):
-    @action(self)
-    def build():
-        print('foo2')
+def handler(signum, frame):
+    cleanup() 
+    exit(-1) 
 
-@entity()
-def bar(self):
-    self.need(foo())
-    self.need(foo2())
-    @action(self)
-    def build():
-        print('bar')
-
-@visitor
-def aa():
-    yield from bar().build()
-@visitor
-def bb():
-    yield from bar().build()
+signal.signal(signal.SIGINT, handler)
+#signal.signal(signal.SIGTERM, handler)
 
 def main():
+
+    global server_p
 
     in_q  = Queue()
     out_q = Queue()
 
-    #loop = asyncio.get_event_loop()
-    server_p = Process(target=start_agent_server, args=(in_q, out_q,))
+    loop = asyncio.get_event_loop()
+    #server_p = Process(target=start_agent_server, args=(in_q, out_q,))
+    server_p = Thread(target=start_agent_server, args=(loop, in_q, out_q,))
     server_p.start()
-    host, port = in_q.get()
-    print("agent server start on {}:{}".format(host, port))
+    try:
+        host, port = in_q.get()
+        print("agent server start on {}:{}".format(host, port))
     
-    GCFEngine.set_imp(Local(host, port))
+        GCFEngine.set_imp(Local(host, port))
     
-    JobEngine.connect(in_q, out_q)
+        JobEngine.connect(in_q, out_q)
 
-    while True:
-        JobEngine.run()
-        Scheduler.run()
-        if len(JobEngine.running_cmds) > 0:
-            m = in_q.get()
-            in_q.put(m)
-        else:
-            break
-        
-    server_p.terminate()
+        require('loader')
 
+        while True:
+            JobEngine.run()
+            Scheduler.run()
+            if len(JobEngine.running_cmds) > 0 or len(JobEngine.pending_cmds) > 0:
+                m = in_q.get()
+                in_q.put(m)
+            else:
+                break
+    finally:        
+        cleanup()
 
 if __name__ == '__main__':
     main()

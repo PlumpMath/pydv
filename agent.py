@@ -7,6 +7,7 @@ from queue import Queue
 import os
 from subprocess import Popen, PIPE
 import shlex
+import signal
 
 host = None
 port = None
@@ -21,12 +22,11 @@ def talk_to_server(data):
     while True:
         try:
             s = socket.socket()
-            print((host, port))
             s.connect((host, port))
             try:
                 s.send(data)
             finally:
-                #s.close()
+                s.close()
                 pass
             break
         except Exception as e:
@@ -42,7 +42,19 @@ def send_heart_beat():
     data = {'cmd' : 'heart_beat',
             'agent_id' : agent_id}
     bs = marshal.dumps(data)
-    talk_to_server(bs)
+    re_try = 10
+    while True:
+        try:
+            talk_to_server(bs)
+            break
+        except Exception as e:
+            re_try -= 1
+            print(str(e))
+            if re_try > 0:
+                pass
+            else:
+                cleanup()
+                exit(-1)
     Timer(time_out, send_heart_beat).start()
     
 
@@ -54,7 +66,7 @@ class AgentProtocal(asyncio.Protocol):
     def data_received(self, data):
         msg = marshal.loads(data)
         cmd_q.put(msg)
-        self.transport.close()
+        #self.transport.close()
 
 server_host = None
 server_port = None
@@ -74,10 +86,11 @@ def start_server(loop):
 
     cmd_q.put(True)
     
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        pass
+    loop.run_forever()
+
+    server.close()
+    loop.run_until_complete(server.wait_closed())
+    loop.close()
     
 def get_cmd():
     data = {'cmd' : 'require_cmd',
@@ -103,13 +116,32 @@ def cmd_done(exitcode, err):
             'errmsg' : err}
     bs = marshal.dumps(data)
     talk_to_server(bs)
-  
+
+inferior_process = None
+server_thread = None
+
+def cleanup():
+    if inferior_process:
+        inferior_process.terminate()
+    #if server_thread:
+    #    server_thread.kill()
+
+def handler(signum, frame):
+    if inferior_process:
+        inferior_process.terminate()
+    exit(-1)
+
+signal.signal(signal.SIGINT, handler)
+signal.signal(signal.SIGTERM, handler)
+ 
 def run():
+    global inferior_process
+    global server_thread
 
     Timer(time_out, send_heart_beat).start()
 
     loop = asyncio.get_event_loop()
-    Thread(target=start_server, args=(loop,)).start()
+    server_thread = Thread(target=start_server, args=(loop,)).start()
 
     cmd_q.get()
 
@@ -119,6 +151,7 @@ def run():
         try:
             os.chdir(cwd)
             cmd_spec = get_cmd()
+            print(cmd_spec)
             if not cmd_spec:
                 next
             cmd = cmd_spec['cmd']
@@ -129,14 +162,16 @@ def run():
                 os.chdir(path)
             args = shlex.split(cmd)
             p = Popen(args, shell=True, stdout=PIPE, stderr=PIPE)
+            inferior_process = p
             out, err = p.communicate()
+            print((out, err))
             exitcode = p.returncode
-            send_status('aaa')
             cmd_done(exitcode, err.decode())
         except Exception as e:
             send_status(str(e))
             pass
-            
+
+    cleanup()        
     
 def main():
 

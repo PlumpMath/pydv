@@ -14,9 +14,10 @@ class JobEngine:
 
     agent_md5 = hashlib.md5()
 
+    max_cmds = 1
     cmds = []
     running_cmds = {}
-    max_cmds = 1
+    pending_cmds = {}
 
     jobengine_visitor = None
 
@@ -31,7 +32,6 @@ class JobEngine:
     @classmethod
     def push_cmd(cls, v, cmd_spec):
         cls.cmds.append((v, cmd_spec))
-        cls.run()
 
     @classmethod
     def run(cls):
@@ -42,11 +42,12 @@ class JobEngine:
             def body():
                 while True:
                     cls.process_msg()
-                    while len(cls.cmds) > 0 and len(cls.running_cmds) < cls.max_cmds:
+                    while len(cls.cmds) > 0 and (len(cls.pending_cmds) + len(cls.running_cmds)) < cls.max_cmds:
                         v, cmd_spec = cls.cmds.pop()
                         agent_id = cls.get_agent(v);
                         cmd_spec['agent_id'] = agent_id
-                        cls.running_cmds[agent_id] = cmd_spec
+                        #print(agent_id)
+                        cls.pending_cmds[agent_id] = cmd_spec
                         #cls.output_q.put(cmd_spec)
                     yield from Scheduler.sleep()
             cls.jobengine_visitor = body
@@ -65,6 +66,11 @@ class JobEngine:
             return agent_id
 
     @classmethod
+    def cleanup(cls):
+        for agent_id in cls.agent_visitor:
+            GCFEngine.kill_agent(agent_id)
+
+    @classmethod
     def process_msg(cls):
         while cls.input_q.qsize() > 0:
             msg = cls.input_q.get()
@@ -80,16 +86,28 @@ class JobEngine:
         agent_id = data['agent_id']
         agent_host = data['agent_host']
         agent_port = data['agent_port']
-        if agent_id in cls.running_cmds:
-            cmd_spec = cls.running_cmds[agent_id]
+        if agent_id in cls.pending_cmds:
+            cmd_spec = cls.pending_cmds[agent_id]
+            del cls.pending_cmds[agent_id]
+            cls.running_cmds[agent_id] = cmd_spec
             out_data = marshal.dumps(cmd_spec)
-            try:
-                s = socket.socket()
-                s.connect((agent_host, agent_port))
-                s.send(out_data)
-            except Exception as e:
-                print(e)
-                raise e
+            re_try = 10
+            while True:
+                try:
+                    s = socket.socket()
+                    s.connect((agent_host, agent_port))
+                    try:
+                        s.send(out_data)
+                    finally:
+                        s.close()
+                    break
+                except Exception as e:
+                    re_try -= 1
+                    print(e)
+                    if re_try > 0:
+                        pass
+                    else:
+                        raise e
         else:
             if agent_id in cls.agent_visitor:
                 GCFEngine.kill_agent(agent_id)
