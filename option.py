@@ -8,7 +8,7 @@ def args_parse():
     p = OptionParser()
     p.add_option('-e', '--expr', dest='expr', action='append',
                  help='specify experssion')
-    p.add_option('-v', '--verbose', dest='verbose', default=logging.INFO,
+    p.add_option('-v', '--verbose', dest='verbose', default='2',
                  help='specify verbose level')
     p.add_option('-o', '--output', dest='output', default='logs',
                  help='specify output directory')
@@ -17,7 +17,18 @@ def args_parse():
 
     (opts, args) = p.parse_args()
 
-    logger.setLevel(opts.verbose)
+    def get_level(level):
+        mapping = {'1' : logging.DEBUG,
+                   '2' : logging.INFO,
+                   '3' : logging.WARNING,
+                   '4' : logging.ERROR,
+                   '5' : logging.CRITICAL}
+        if level in mapping:
+            return mapping[level]
+        else:
+            raise Exception('unsupported verbose level ' + level)
+
+    logger.setLevel(get_level(opts.verbose))
 
     master_log = path.join(opts.output, opts.logfile)
     try:
@@ -26,7 +37,7 @@ def args_parse():
         pass
     fh = logging.FileHandler(master_log)
     fh.setFormatter(logging.Formatter(FORMAT))
-    fh.setLevel(opts.verbose)
+    fh.setLevel(get_level(opts.verbose))
 
     logger.addHandler(fh)
 
