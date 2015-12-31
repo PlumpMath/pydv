@@ -4,6 +4,7 @@ from gcfengine import GCFEngine
 import socket
 import marshal
 import hashlib
+from logger import logger
 
 class JobEngine:
 
@@ -112,7 +113,7 @@ class JobEngine:
                 break
             except Exception as e:
                 re_try -= 1
-                print(e)
+                logger.warning(str(e))
                 if re_try > 0:
                     pass
                 else:

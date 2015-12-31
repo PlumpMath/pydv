@@ -11,6 +11,7 @@ import os
 from subprocess import Popen, PIPE
 import shlex
 import signal
+from logger import logger
 
 host = None
 port = None
@@ -33,7 +34,7 @@ def talk_to_server(data):
                 pass
             break
         except Exception as e:
-            print(e)
+            logger.warning(str(e))
             re_try -= 1
             if re_try > 0:
                 pass

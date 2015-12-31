@@ -14,6 +14,7 @@ import signal
 from types import GeneratorType
 from utils import require, get_ns
 from option import args_parse
+from logger import logger
 
 server_p = None
 
@@ -46,7 +47,7 @@ def main():
     try:
         host, port = in_q.get()
 
-        print("agent server start on {}:{}".format(host, port))
+        logger.info("agent server start on {}:{}".format(host, port))
     
         GCFEngine.set_imp(Local(host, port))
     
