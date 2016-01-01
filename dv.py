@@ -43,7 +43,7 @@ def main():
     out_q = Queue()
 
     #loop = asyncio.get_event_loop()
-    server_p = Process(target=start_agent_server, args=(in_q, out_q,))
+    server_p = Process(target=start_agent_server, args=(in_q, out_q, path.abspath(opts.out_dir), opts.verbose,))
     #server_p = Thread(target=start_agent_server, args=(loop, in_q, out_q,))
     server_p.start()
 

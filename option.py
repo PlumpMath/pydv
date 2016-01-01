@@ -1,8 +1,7 @@
 from optparse import OptionParser
-from logger import logger, FORMAT
+from logger import logger, FORMAT, get_level
 import logging
 from os import path, makedirs, rename
-from utils import get_level
 
 def args_parse():
 

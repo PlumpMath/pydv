@@ -11,10 +11,9 @@ import os
 from subprocess import Popen, PIPE
 import shlex
 import signal
-from logger import logger, FORMAT
+from logger import logger, FORMAT, get_level
 from os import path, rename 
 import logging
-from utils import get_level
 
 host = None
 port = None
