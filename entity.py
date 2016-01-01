@@ -60,6 +60,7 @@ class EntityBase:
 
     def build_need(self):
         n = self.node
+        cv = Scheduler.current
         if n.color == 'black':
             return
         
@@ -83,33 +84,49 @@ class EntityBase:
                 if sg.out_degree(i) == 0 and not i.color == 'black':
                     ns.add(i.ntt)
         collect_nodes()
-        while len(ns) > 0:
-            @join
-            def body(s):
-                for i in ns:
-                    @spawn(s)
-                    def f(ii=i):
-                        try:
-                            yield from ii.build()
-                        finally:
-                            ii.node.color = 'black'
-                            ns.remove(ii)
-                            if sg.has_node(ii.node):
-                                sg.remove_node(ii.node)
-            yield from body()
-            collect_nodes()
+        try:
+            while len(ns) > 0:
+                @join
+                def body(s):
+                    for i in ns:
+                        @spawn(s)
+                        def f(ii=i):
+                            try:
+                                yield from ii.build()
+                            finally:
+                                ii.node.color = 'black'
+                                ns.remove(ii)
+                                if sg.has_node(ii.node):
+                                    sg.remove_node(ii.node)
+                yield from body()
+                collect_nodes()
             
-        while len(n.wait_on) > 0:
-            yield from Scheduler.sleep()
+            while len(n.wait_on) > 0:
+                yield from Scheduler.sleep()
+
+        except Exception as e:
+            cv.exception = e
+            for i in sg.nodes_iter():
+                i.color = 'black'
+                for v in i.ntt.waiters:
+                    i.ntt.wait_on.clear()
+                    v.exception = cv.exception
+                    Scheduler.wake(v)
             
         for i in n.waiter_nodes:
             i.wait_on.remove(n)
             
         for v in n.waiters:
+            if cv.exception:
+                v.exception = cv.exception
             Scheduler.wake(v)
             
         n.waiters.clear()
         n.waiter_nodes.clear()
+
+        if cv.exception:
+            raise cv.exception
+
 
 class Entity(EntityBase):
     
@@ -130,15 +147,19 @@ def action(parent=None):
             if parent:
                 fn = str(parent) + '.' + fn
             logger.info('-> running action {}'.format(fn))
-                
-            if a.__name__ == 'build':
-                if parent:
-                    yield from parent.build_need()
-            res = a(*args, **kargs)
-            if type(res) == GeneratorType:
-                res = yield from res
-            logger.info('<- action {} finished'.format(fn))
-            return res
+            
+            try:    
+                if a.__name__ == 'build':
+                    if parent:
+                        yield from parent.build_need()
+                res = a(*args, **kargs)
+                if type(res) == GeneratorType:
+                    res = yield from res
+                logger.info('<- action {} passed'.format(fn))
+                return res
+            except Exception as e:
+                logger.error('<- action {} failed'.format(fn))
+                raise e
         if parent:
             parent.add_action(a.__name__, na)
             if a.__name__ == 'build':
@@ -147,11 +168,15 @@ def action(parent=None):
                     if parent:
                         fn = str(parent) + '.' + fn
                     logger.info('-> running action {}'.format(fn))
-                    res = a(*args, **kargs)
-                    if type(res) == GeneratorType:
-                        res = yield from res
-                    logger.info('<- action {} finished'.format(fn))
-                    return res
+                    try:
+                        res = a(*args, **kargs)
+                        if type(res) == GeneratorType:
+                            res = yield from res
+                        logger.info('<- action {} passed'.format(fn))
+                        return res
+                    except Exception as e:
+                        logger.info('<- action {} failed'.format(fn))
+                        raise e
                 parent.add_action('build_self', nna)
         return na
     return f
@@ -166,10 +191,10 @@ def cmd(*args):
     yield from Scheduler.sleep()
     exitcode = cmd_spec['exitcode']
     if exitcode == 0:
-        logger.info("command '{}' passed".format(cmd_spec['cmd']))
+        logger.info("> command '{}' passed".format(cmd_spec['cmd']))
     else:
         errmsg = cmd_spec['errmsg'] + (" with exitcode {}".format(exitcode))
-        logger.error(errmsg)
+        logger.error("> command '{}' failed: {}".format(cmd_spec['cmd'], errmsg))
         raise Exception(errmsg)
 
 def dir(p):

@@ -166,9 +166,15 @@ def run():
                     pass
                 os.chdir(path)
             args = shlex.split(cmd)
-            p = Popen(args, stdout=PIPE, stderr=PIPE)
-            inferior_process = p
-            out, err = p.communicate()
+            out = None
+            err = None
+            p   = None
+            try:
+                p = Popen(args, stdout=PIPE, stderr=PIPE)
+                inferior_process = p
+                out, err = p.communicate()
+            except Exception as e:
+                err = str(e).encode()
             if 'logfile' in cmd_spec:
                 logfile = os.path.abspath(cmd_spec['logfile'])
                 logdir = os.path.dirname(logfile)
@@ -180,11 +186,16 @@ def run():
                     pass
                 try:
                     fh = open(logfile, 'w')
-                    fh.write(out.decode())
-                    fh.write(err.decode())
+                    if out:
+                        fh.write(out.decode())
+                    if err:
+                        fh.write(err.decode())
                 finally:
                     fh.close()
-            exitcode = p.returncode
+            if p:
+                exitcode = p.returncode
+            else:
+                exitcode = -1
             if out:
                 logger.info("command '{}' passed : {}".format(cmd, out.decode()))
             if err:

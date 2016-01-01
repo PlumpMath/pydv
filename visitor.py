@@ -10,6 +10,9 @@ class Visitor:
                 res = body(*args, **kargs)
                 if type(res) == GeneratorType:
                     res = yield from res
+            except Exception as e:
+                self.exception = e
+            #    raise e
             finally:
                 for i in self.waiters:
                     Scheduler.wake(i)
@@ -41,9 +44,9 @@ class Visitor:
             next(self())
         except StopIteration as e:
             pass
-        except Exception as e:
-            self.exception = e
-            raise e
+        #except Exception as e:
+        #    self.exception = e
+        #    raise e
         
 def visitor(body):
     return Visitor(body)
@@ -70,6 +73,12 @@ class Joiner:
             return True
         while not all_done():
             yield from Scheduler.sleep()
+        es = []
+        for v in self.children:
+            if v.exception:
+                es.append(v.exception)
+        if len(es) > 0:
+            raise Exception(es)
     
 def join(body):
     return Joiner(body)

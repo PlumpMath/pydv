@@ -12,7 +12,7 @@ from server import start_agent_server
 from job import JobEngine
 from scheduler import Scheduler
 from entity import entity, action, cmd
-from visitor import visitor
+from visitor import visitor, join, spawn
 from local import Local
 from gcfengine import GCFEngine
 from utils import require, get_ns
@@ -44,7 +44,7 @@ def main():
     in_q  = Queue()
     out_q = Queue()
 
-    logger.info('dvpy started')
+    logger.info('dv.py started')
     # start agent server
     #loop = asyncio.get_event_loop()
     server_p = Process(target=start_agent_server, args=(in_q, out_q, path.abspath(opts.out_dir), opts.verbose,))
@@ -70,14 +70,19 @@ def main():
         require('loader')
 
         # evaluate experssions
-        if opts.expr:
-            for e in opts.expr:
-                @visitor
-                def body(ee=e):
-                   res = eval(ee, get_ns(), get_ns())
-                   if type(res) == GeneratorType:
-                       yield from res
-                   return res
+        @visitor
+        def top():
+            if opts.expr:
+                @join
+                def body(self):
+                    for e in opts.expr:
+                        @spawn(self)
+                        def body(ee=e):
+                           res = eval(ee, get_ns(), get_ns())
+                           if type(res) == GeneratorType:
+                               yield from res
+                           return res
+                yield from body()
 
         # run
         while True:
@@ -87,8 +92,12 @@ def main():
                 next
             else:
                 break
+        if top.exception:
+            logger.error('dv.py failed')
+            #raise top.exception
+        else:
+            logger.info('dv.py finished')
     finally:
-        logger.info('dvpy finished')
         cleanup()
 
 if __name__ == '__main__':
