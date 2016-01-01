@@ -55,13 +55,14 @@ def main():
         # waiting for server started
         host, port = in_q.get()
 
-        logger.info("agent server started on {}:{}".format(host, port))
+        #logger.info("agent server started on {}:{}".format(host, port))
 
         # set gcf engine    
         GCFEngine.set_imp(Local(host, port, path.abspath(opts.out_dir), opts.verbose))
     
         # config job engine
         JobEngine.connect(in_q, out_q)
+        JobEngine.out_dir = path.abspath(opts.out_dir)
         logger.info('max agents = {}'.format(opts.max_agents))
         JobEngine.max_cmds = int(opts.max_agents)
 

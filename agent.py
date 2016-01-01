@@ -11,9 +11,10 @@ import os
 from subprocess import Popen, PIPE
 import shlex
 import signal
-from logger import logger, FORMAT, get_level
 from os import path, rename 
 import logging
+
+from logger import logger, FORMAT, get_level
 
 host = None
 port = None
@@ -165,9 +166,24 @@ def run():
                     pass
                 os.chdir(path)
             args = shlex.split(cmd)
-            p = Popen(args, shell=True, stdout=PIPE, stderr=PIPE)
+            p = Popen(args, stdout=PIPE, stderr=PIPE)
             inferior_process = p
             out, err = p.communicate()
+            if 'logfile' in cmd_spec:
+                logfile = os.path.abspath(cmd_spec['logfile'])
+                logdir = os.path.dirname(logfile)
+                if os.path.exists(logfile):
+                    rename(logfile, (logfile+'.bak'))
+                try:
+                    os.makedirs(logdir)
+                except Exception as e:
+                    pass
+                try:
+                    fh = open(logfile, 'w')
+                    fh.write(out.decode())
+                    fh.write(err.decode())
+                finally:
+                    fh.close()
             exitcode = p.returncode
             if out:
                 logger.info("command '{}' passed : {}".format(cmd, out.decode()))

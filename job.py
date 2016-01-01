@@ -5,6 +5,7 @@ import socket
 import marshal
 import hashlib
 from logger import logger
+from os import path
 
 class JobEngine:
 
@@ -24,6 +25,8 @@ class JobEngine:
 
     input_q = None
     output_q = None
+
+    out_dir = None
 
     @classmethod
     def connect(cls, in_q, out_q):
@@ -97,6 +100,7 @@ class JobEngine:
         cmd_spec = {'cmd' : 'terminate'}
         if agent_id in cls.pending_cmds:
             cmd_spec = cls.pending_cmds[agent_id]
+            cmd_spec['logfile'] = path.join(cls.out_dir, 'cmds', agent_id)
             del cls.pending_cmds[agent_id]
             cls.running_cmds[agent_id] = cmd_spec
        
