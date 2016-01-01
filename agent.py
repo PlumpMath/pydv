@@ -150,10 +150,11 @@ def run():
         try:
             os.chdir(cwd)
             cmd_spec = get_cmd()
-            send_status(cmd_spec)
+            #send_status(cmd_spec)
             if not cmd_spec:
                 next
             cmd = cmd_spec['cmd']
+            logger.debug('got command '+cmd)
             if cmd == 'terminate':
                 break
             if 'dir' in cmd_spec:
@@ -174,7 +175,8 @@ def run():
                 logger.error("command '{}' failed : {}".format(cmd, err.decode()))
             cmd_done(exitcode, err.decode())
         except Exception as e:
-            send_status(str(e))
+            #send_status(str(e))
+            logger.error(str(e))
             pass
 
     cleanup()        
