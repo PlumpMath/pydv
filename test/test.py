@@ -2,13 +2,13 @@
 def foo3(self):
     @action(self)
     def build():
-        yield from cmd("echo aaaa")
+        yield from cmd("echodd aaaa")
 
 @entity()
 def foo(self):
     @action(self)
     def build():
-        yield from cmd('echo bbb')
+        yield from cmd('echoddd bbb')
 
 @entity()
 def foo2(self):

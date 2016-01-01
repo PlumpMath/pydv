@@ -7,6 +7,7 @@ import signal
 from types import GeneratorType
 from os import path
 import logging
+from traceback import extract_tb
 
 from server import start_agent_server
 from job import JobEngine
@@ -93,6 +94,19 @@ def main():
             else:
                 break
         if top.exception:
+            def print_exception(e):
+                if isinstance(e, Exception):
+                    for l in extract_tb(e.__traceback__):
+                        logger.debug(l)
+                if not isinstance(e, Exception):
+                    logger.error(e)
+                    return
+                for i in e.args:
+                    if not isinstance(i, list):
+                        i = [i]
+                    for j in i:
+                        print_exception(j)
+            print_exception(top.exception)
             logger.error('dv.py failed')
             #raise top.exception
         else:
