@@ -108,14 +108,17 @@ class EntityBase:
             cv.exception = e
             for i in sg.nodes_iter():
                 i.color = 'black'
-                for v in i.ntt.waiters:
-                    i.ntt.wait_on.clear()
+                for j in i.waiter_nodes:
+                    j.wait_on.remove(i)
+                for v in i.waiters:
                     v.exception = cv.exception
                     Scheduler.wake(v)
+
+        n.color = 'black'
             
         for i in n.waiter_nodes:
             i.wait_on.remove(n)
-            
+
         for v in n.waiters:
             if cv.exception:
                 v.exception = cv.exception

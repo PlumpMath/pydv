@@ -8,7 +8,7 @@ def foo3(self):
 def foo(self):
     @action(self)
     def build():
-        yield from cmd('echo bbbb')
+        yield from cmd('echo bbb')
 
 @entity()
 def foo2(self):
