@@ -52,6 +52,7 @@ def main():
         GCFEngine.set_imp(Local(host, port))
     
         JobEngine.connect(in_q, out_q)
+        JobEngine.max_cmds = int(opts.max_agents)
 
         require('loader')
 

@@ -1,7 +1,7 @@
 from optparse import OptionParser
 from logger import logger, FORMAT
 import logging
-from os import path, makedirs
+from os import path, makedirs, rename
 
 def args_parse():
 
@@ -14,6 +14,8 @@ def args_parse():
                  help='specify output directory')
     p.add_option('-l', '--logfile', dest='logfile', default='dvpy_master.log',
                  help='specify log filename')
+    p.add_option('-m', '--max_agents', dest='max_agents', default='1',
+                 help='specify max agent number')
 
     (opts, args) = p.parse_args()
 
@@ -30,11 +32,13 @@ def args_parse():
 
     logger.setLevel(get_level(opts.verbose))
 
-    master_log = path.join(opts.output, opts.logfile)
+    master_log = path.abspath(path.join(opts.output, opts.logfile))
     try:
         makedirs(path.dirname(master_log))
     except Exception as e:
         pass
+    if path.exists(master_log):
+        rename(master_log, (master_log+'.bak'))
     fh = logging.FileHandler(master_log)
     fh.setFormatter(logging.Formatter(FORMAT))
     fh.setLevel(get_level(opts.verbose))
