@@ -3,6 +3,7 @@ from visitor import visitor, join, spawn
 from scheduler import Scheduler
 from types import GeneratorType
 from job import JobEngine
+from logger import logger
 
 class EntityBase:
     
@@ -41,6 +42,9 @@ class EntityBase:
     def __call__(self):
         self.initialize()
         return self
+
+    def __str__(self):
+        return self.name
 
     def need(self, ntt):
         self.needs.add(ntt)
@@ -122,20 +126,31 @@ def entity(parent=None):
 def action(parent=None):
     def f(a):
         def na(*args, **kargs):
+            fn = a.__name__
+            if parent:
+                fn = str(parent) + '.' + fn
+            logger.info('-> running action {}'.format(fn))
+                
             if a.__name__ == 'build':
                 if parent:
                     yield from parent.build_need()
             res = a(*args, **kargs)
             if type(res) == GeneratorType:
                 res = yield from res
+            logger.info('<- action {} finished'.format(fn))
             return res
         if parent:
             parent.add_action(a.__name__, na)
             if a.__name__ == 'build':
                 def nna(*args, **kargs):
+                    fn = 'build_self'
+                    if parent:
+                        fn = str(parent) + '.' + fn
+                    logger.info('-> running action {}'.format(fn))
                     res = a(*args, **kargs)
                     if type(res) == GeneratorType:
                         res = yield from res
+                    logger.info('<- action {} finished'.format(fn))
                     return res
                 parent.add_action('build_self', nna)
         return na

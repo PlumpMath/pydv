@@ -1,6 +1,13 @@
 #!/usr/bin/env python3.4
 
 from multiprocessing import Process, Queue
+from threading import Thread
+import asyncio
+import signal
+from types import GeneratorType
+from os import path
+import logging
+
 from server import start_agent_server
 from job import JobEngine
 from scheduler import Scheduler
@@ -8,15 +15,9 @@ from entity import entity, action, cmd
 from visitor import visitor
 from local import Local
 from gcfengine import GCFEngine
-from threading import Thread
-import asyncio
-import signal
-from types import GeneratorType
 from utils import require, get_ns
 from option import args_parse
 from logger import logger
-from os import path
-import logging
 
 server_p = None
 
@@ -37,28 +38,37 @@ def main():
 
     global server_p
 
+    # parsing arguments
     (opts, args) = args_parse()
 
     in_q  = Queue()
     out_q = Queue()
 
+    logger.info('dvpy started')
+    # start agent server
     #loop = asyncio.get_event_loop()
     server_p = Process(target=start_agent_server, args=(in_q, out_q, path.abspath(opts.out_dir), opts.verbose,))
     #server_p = Thread(target=start_agent_server, args=(loop, in_q, out_q,))
     server_p.start()
 
     try:
+        # waiting for server started
         host, port = in_q.get()
 
-        logger.info("agent server start on {}:{}".format(host, port))
-    
+        logger.info("agent server started on {}:{}".format(host, port))
+
+        # set gcf engine    
         GCFEngine.set_imp(Local(host, port, path.abspath(opts.out_dir), opts.verbose))
     
+        # config job engine
         JobEngine.connect(in_q, out_q)
+        logger.info('max agents = {}'.format(opts.max_agents))
         JobEngine.max_cmds = int(opts.max_agents)
 
+        # load files
         require('loader')
 
+        # evaluate experssions
         if opts.expr:
             for e in opts.expr:
                 @visitor
@@ -68,6 +78,7 @@ def main():
                        yield from res
                    return res
 
+        # run
         while True:
             JobEngine.run()
             Scheduler.run()
@@ -75,7 +86,8 @@ def main():
                 next
             else:
                 break
-    finally:        
+    finally:
+        logger.info('dvpy finished')
         cleanup()
 
 if __name__ == '__main__':
