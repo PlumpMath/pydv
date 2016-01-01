@@ -60,7 +60,7 @@ class AgentProtocal(asyncio.Protocol):
 
     def data_received(self, data):
         msg = marshal.loads(data)
-        logger.debug(str(msg))
+        logger.debug('agent {} server received data {}'.format(agent_id, msg))
         cmd_q.put(msg)
         #self.transport.close()
 
