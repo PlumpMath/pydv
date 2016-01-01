@@ -52,7 +52,9 @@ def start_agent_server(_out_q, _in_q, out_dir, verbose):
     server = loop.run_until_complete(coro)
 
     _, server_port = server.sockets[0].getsockname()
-    
+
+    logger.info('agent server started on {}:{}'.format(server_host, server_port))    
+
     out_q.put((server_host, server_port))
 
     loop.run_forever()

@@ -60,6 +60,7 @@ class AgentProtocal(asyncio.Protocol):
 
     def data_received(self, data):
         msg = marshal.loads(data)
+        logger.debug(str(msg))
         cmd_q.put(msg)
         #self.transport.close()
 
@@ -140,6 +141,8 @@ def run():
     server_thread = Thread(target=start_server, args=(loop,)).start()
 
     server_host, server_port = cmd_q.get()
+
+    logger.info('server started on {}:{}'.format(server_host, server_port))
 
     cwd = os.getcwd()
     
