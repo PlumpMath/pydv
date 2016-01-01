@@ -11,11 +11,15 @@ import os
 from subprocess import Popen, PIPE
 import shlex
 import signal
-from logger import logger
+from logger import logger, FORMAT
+from os import path, rename 
+import logging
+from utils import get_level
 
 host = None
 port = None
 agent_id = None
+out_dir = None
 
 time_out = 60
 
@@ -116,6 +120,7 @@ def cleanup():
         inferior_process.terminate()
     #if server_thread:
     #    server_thread.terminate()
+    logging.shutdown()
 
 def handler(signum, frame):
     cleanup()
@@ -161,6 +166,10 @@ def run():
             inferior_process = p
             out, err = p.communicate()
             exitcode = p.returncode
+            if out:
+                logger.info("command '{}' passed : {}".format(cmd, out.decode()))
+            if err:
+                logger.error("command '{}' failed : {}".format(cmd, err.decode()))
             cmd_done(exitcode, err.decode())
         except Exception as e:
             send_status(str(e))
@@ -170,7 +179,7 @@ def run():
     
 def main():
 
-    global host, port, agent_id
+    global host, port, agent_id, out_dir
     
     p = OptionParser()
     p.add_option('-m', '--host', dest='host',
@@ -179,12 +188,32 @@ def main():
                  help='specify port')
     p.add_option('-i', '--id', dest='id',
                  help='specify id name')
+    p.add_option('-o', '--out_dir', dest='out_dir',
+                 help='specify output directory')
+    p.add_option('-v', '--verbose', dest='verbose', default='1',
+                 help='specify verbose level')
     
     (options, args) = p.parse_args()
 
     host = options.host
     port = int(options.port)
     agent_id = options.id
+    out_dir = path.abspath(options.out_dir)
+
+    logger.setLevel(get_level(options.verbose))
+
+    agent_log = path.abspath(path.join(out_dir, 'agents', agent_id))
+    try:
+        os.makedirs(path.dirname(agent_log))
+    except Exception as e:
+        pass
+    if path.exists(agent_log):
+        rename(agent_log, (agent_log+'.bak'))
+    fh = logging.FileHandler(agent_log)
+    fh.setFormatter(logging.Formatter(FORMAT))
+    fh.setLevel(get_level(options.verbose))
+
+    logger.addHandler(fh)
 
     run()
 

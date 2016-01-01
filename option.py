@@ -2,6 +2,7 @@ from optparse import OptionParser
 from logger import logger, FORMAT
 import logging
 from os import path, makedirs, rename
+from utils import get_level
 
 def args_parse():
 
@@ -10,7 +11,7 @@ def args_parse():
                  help='specify experssion')
     p.add_option('-v', '--verbose', dest='verbose', default='2',
                  help='specify verbose level')
-    p.add_option('-o', '--output', dest='output', default='logs',
+    p.add_option('-o', '--out_dir', dest='out_dir', default='logs',
                  help='specify output directory')
     p.add_option('-l', '--logfile', dest='logfile', default='dvpy_master.log',
                  help='specify log filename')
@@ -19,20 +20,9 @@ def args_parse():
 
     (opts, args) = p.parse_args()
 
-    def get_level(level):
-        mapping = {'1' : logging.DEBUG,
-                   '2' : logging.INFO,
-                   '3' : logging.WARNING,
-                   '4' : logging.ERROR,
-                   '5' : logging.CRITICAL}
-        if level in mapping:
-            return mapping[level]
-        else:
-            raise Exception('unsupported verbose level ' + level)
-
     logger.setLevel(get_level(opts.verbose))
 
-    master_log = path.abspath(path.join(opts.output, opts.logfile))
+    master_log = path.abspath(path.join(opts.out_dir, opts.logfile))
     try:
         makedirs(path.dirname(master_log))
     except Exception as e:

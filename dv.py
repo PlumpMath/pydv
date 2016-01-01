@@ -15,6 +15,8 @@ from types import GeneratorType
 from utils import require, get_ns
 from option import args_parse
 from logger import logger
+from os import path
+import logging
 
 server_p = None
 
@@ -22,6 +24,7 @@ def cleanup():
     if server_p:
         server_p.terminate()
     JobEngine.cleanup()
+    logging.shutdown()
 
 def handler(signum, frame):
     cleanup() 
@@ -49,7 +52,7 @@ def main():
 
         logger.info("agent server start on {}:{}".format(host, port))
     
-        GCFEngine.set_imp(Local(host, port))
+        GCFEngine.set_imp(Local(host, port, path.abspath(opts.out_dir), opts.verbose))
     
         JobEngine.connect(in_q, out_q)
         JobEngine.max_cmds = int(opts.max_agents)
