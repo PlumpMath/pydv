@@ -28,6 +28,9 @@ class EntityBase:
         self.node.waiter_nodes = set()
         self.node.wait_on = set()
         needgraph.add_node(self.node)
+        @action(self)
+        def build():
+            pass
         EntityBase.register_entity(self.name, self)
         
     def add_action(self, name, action):
@@ -47,7 +50,7 @@ class EntityBase:
         return self.name
 
     def need(self, ntt):
-        self.needs.add(ntt)
+        self.needs.add(ntt())
         needgraph.add_edge(self.node, ntt.node)
 
     def add_waiter(self, n):
