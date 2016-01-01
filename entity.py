@@ -165,8 +165,11 @@ def cmd(*args):
     JobEngine.push_cmd(v, cmd_spec)
     yield from Scheduler.sleep()
     exitcode = cmd_spec['exitcode']
-    if not exitcode == 0:
+    if exitcode == 0:
+        logger.info("command '{}' passed".format(cmd_spec['cmd']))
+    else:
         errmsg = cmd_spec['errmsg'] + (" with exitcode {}".format(exitcode))
+        logger.error(errmsg)
         raise Exception(errmsg)
 
 def dir(p):
