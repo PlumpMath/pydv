@@ -18,6 +18,9 @@ class EntityBase:
             
     def __init__(self, body, parent=None):
         self.name = body.__name__
+        self.fullname = self.name
+        if parent:
+            self.fullname = str(parent) + '.' + self.name
         self.body = body
         self.parent = parent
         self.needs = set()
@@ -34,7 +37,7 @@ class EntityBase:
             pass
         EntityBase.register_entity(self.name, self)
         
-    def add_action(self, name, action):
+    def add(self, name, action):
         self.__dict__[name] = action
         return action
     
@@ -48,7 +51,7 @@ class EntityBase:
         return self
 
     def __str__(self):
-        return self.name
+        return self.fullname
 
     def need(self, ntt):
         self.needs.add(ntt())
@@ -144,6 +147,8 @@ class Entity(EntityBase):
 def entity(parent=None):
     def f(body):
         ntt = Entity(body, parent=parent)
+        if parent:
+            parent.add(body.__name__, ntt)
         return ntt
     return f
 
@@ -168,7 +173,7 @@ def action(parent=None):
                 logger.error('<- action {} failed'.format(fn))
                 raise e
         if parent:
-            parent.add_action(a.__name__, na)
+            parent.add(a.__name__, na)
             if a.__name__ == 'build':
                 def nna(*args, **kargs):
                     fn = 'build_self'
@@ -184,7 +189,7 @@ def action(parent=None):
                     except Exception as e:
                         logger.info('<- action {} failed'.format(fn))
                         raise e
-                parent.add_action('build_self', nna)
+                parent.add('build_self', nna)
         return na
     return f
 

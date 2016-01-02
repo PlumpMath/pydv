@@ -14,10 +14,12 @@ def foo(self):
 def foo2(self):
     self.need(foo3)
 
-@entity()
-def bar(self):
-    self.need(foo)
-    self.need(foo2)
+@component()
+def aaa(self):
+    @entity(self)
+    def bar(self):
+        self.need(foo)
+        self.need(foo2)
 
 @event.subscribe('dvpy_done')
 def body():
