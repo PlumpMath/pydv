@@ -94,18 +94,18 @@ def main():
             else:
                 break
         if top.exception:
-            def print_exception(e):
+            def print_exception(e, indent=0):
                 if isinstance(e, Exception):
                     for l in extract_tb(e.__traceback__):
-                        logger.debug(l)
+                        logger.debug((" "*indent)+str(l))
                 if not isinstance(e, Exception):
-                    logger.error(e)
+                    logger.error((" "*indent)+str(e))
                     return
                 for i in e.args:
                     if not isinstance(i, list):
                         i = [i]
                     for j in i:
-                        print_exception(j)
+                        print_exception(j, indent+2)
             print_exception(top.exception)
             logger.error('dv.py failed')
             #raise top.exception

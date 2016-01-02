@@ -35,6 +35,7 @@ class JobEngine:
 
     @classmethod
     def push_cmd(cls, v, cmd_spec):
+        logger.debug("push command {}".format(cmd_spec))
         cls.cmds.append((v, cmd_spec))
 
     @classmethod
@@ -50,9 +51,7 @@ class JobEngine:
                         v, cmd_spec = cls.cmds.pop()
                         agent_id = cls.get_agent(v);
                         cmd_spec['agent_id'] = agent_id
-                        #print(agent_id)
                         cls.pending_cmds[agent_id] = cmd_spec
-                        #cls.output_q.put(cmd_spec)
                     yield from Scheduler.sleep()
             cls.jobengine_visitor = body
 

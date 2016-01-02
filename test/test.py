@@ -2,7 +2,7 @@
 def foo3(self):
     @action(self)
     def build():
-        yield from cmd("echo aaaa")
+        yield from cmd("echo aaa")
 
 @entity()
 def foo(self):
