@@ -20,6 +20,7 @@ from utils import require, get_ns
 from option import args_parse
 from logger import logger
 import event
+from test import run_test
 
 server_p = None
 
@@ -74,17 +75,24 @@ def main():
         # evaluate experssions
         @visitor
         def top():
-            if opts.expr:
-                @join
-                def body(self):
+            @join
+            def body(self):
+                if opts.expr:
                     for e in opts.expr:
                         @spawn(self)
                         def body(ee=e):
-                           res = eval(ee, get_ns(), get_ns())
-                           if type(res) == GeneratorType:
-                               yield from res
-                           return res
-                yield from body()
+                            res = eval(ee, get_ns(), get_ns())
+                            if type(res) == GeneratorType:
+                                yield from res
+                            return res
+                if opts.test:
+                    @spawn(self)
+                    def body():
+                        res = run_test(*opts.test)
+                        if type(res) == GeneratorType:
+                            yield from res
+                        return res
+            yield from body()
 
         # run
         while True:

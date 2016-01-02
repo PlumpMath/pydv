@@ -16,6 +16,8 @@ def args_parse():
                  help='specify log filename')
     p.add_option('-m', '--max_agents', dest='max_agents', default='1',
                  help='specify max agent number')
+    p.add_option('-t', '--test', dest='test', action='append',
+                 help='specify test')
 
     (opts, args) = p.parse_args()
 
