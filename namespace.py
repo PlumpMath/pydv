@@ -1,6 +1,8 @@
 
 class Namespace:
 
+    suites = {}
+
     def __init__(self, body, parent=None):
         self.name = body.__name__
         self.fullname = self.name
