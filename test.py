@@ -79,3 +79,4 @@ def run_test(*ts, actions=[]):
                 except Exception as e:
                     Test.test_status[tn] = 'failed'
                     raise e
+    yield from body()
