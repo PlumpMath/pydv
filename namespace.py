@@ -1,3 +1,4 @@
+from copy import copy
 
 class Namespace:
 
@@ -9,6 +10,7 @@ class Namespace:
         if parent:
             self.fullname = str(parent) + '.' + self.name
         self.bodies = [body]
+        self.ns = {}
         self.parent = parent
 
     def __call__(self):
@@ -28,6 +30,7 @@ class Namespace:
 
     def add(self, name, body):
         self.__dict__[name] = body
+        self.ns[name] = copy(body)
         return body
 
 def component(parent=None):

@@ -5,6 +5,7 @@ from types import GeneratorType
 from job import JobEngine
 from logger import logger
 from namespace import Namespace
+from copy import copy
 
 class EntityBase:
     
@@ -41,6 +42,12 @@ class EntityBase:
     def add(self, name, action):
         self.__dict__[name] = action
         return action
+
+    def maxin(self, ns):
+        if not isinstance(self, Namespace):
+            raise Exception("attempt to maxin in non-namspace {}".format(ns))
+        for n in ns.ns:
+            self.__dict__[n] = copy(ns.ns[n])
     
     def initialize(self):
         if not self.initialized:
