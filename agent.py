@@ -22,6 +22,7 @@ agent_id = None
 out_dir = None
 
 time_out = 60
+timer = None
 
 cmd_q = Queue()
 
@@ -47,11 +48,20 @@ def talk_to_server(data):
 
 
 def send_heart_beat():
+    global timer
+
     data = {'cmd' : 'heart_beat',
             'agent_id' : agent_id}
     bs = marshal.dumps(data)
-    talk_to_server(bs)
-    Timer(time_out, send_heart_beat).start()
+    try:
+        talk_to_server(bs)
+    except Exception as e:
+        logger.error(e)
+        logger.error("connect send heartbeat to dv.py and susicide")
+        cleanup()
+        exit(-1)
+    timer = Timer(time_out, send_heart_beat)
+    timer.start()
     
 
 class AgentProtocal(asyncio.Protocol):
@@ -135,8 +145,10 @@ def run():
     global server_thread
     global server_host
     global server_port
+    global timer
 
-    Timer(time_out, send_heart_beat).start()
+    timer = Timer(time_out, send_heart_beat)
+    timer.start()
 
     loop = asyncio.get_event_loop()
     server_thread = Thread(target=start_server, args=(loop,)).start()

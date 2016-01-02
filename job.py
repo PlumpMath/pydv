@@ -6,6 +6,8 @@ import marshal
 import hashlib
 from logger import logger
 from os import path
+from time import time
+from threading import Timer
 
 class JobEngine:
 
@@ -16,8 +18,11 @@ class JobEngine:
     reused_agents = set()
 
     agent_count = 0
-
     agent_md5 = hashlib.md5()
+
+    agent_status = {}
+    time_out = 60
+    timer = None
 
     max_cmds = 1
     cmds = []
@@ -46,6 +51,8 @@ class JobEngine:
         if cls.jobengine_visitor:
             Scheduler.wake(cls.jobengine_visitor)
         else:
+            cls.timer = Timer(cls.time_out, cls.agent_checker, args=(cls,))
+            cls.timer.start()
             @visitor
             def body():
                 try:
@@ -72,6 +79,7 @@ class JobEngine:
                 vv = cls.agent_visitor[agent_id]
                 del cls.visitor_agent[vv]
                 del cls.agent_visitor[agent_id]
+                del cls.agent_status[agent_id]
             else:
                 cls.agent_count += 1
                 cls.agent_md5.update(bytes(cls.agent_count))
@@ -79,10 +87,13 @@ class JobEngine:
                 GCFEngine.spawn_agent(agent_id)
             cls.visitor_agent[v] = agent_id
             cls.agent_visitor[agent_id] = v
+            cls.agent_status[agent_id] = time()
             return agent_id
 
     @classmethod
     def cleanup(cls):
+        if cls.timer:
+            cls.timer.cancel()
         for agent_id in cls.agent_visitor:
             GCFEngine.kill_agent(agent_id)
 
@@ -152,10 +163,16 @@ class JobEngine:
                 v = cls.agent_visitor[agent_id]
                 del cls.visitor_agent[v]
                 del cls.agent_visitor[agent_id]
+                del cls.agent_status[agent_id]
 
     def heart_beart(cls, data):
         #print(data)
-        pass
+        agent_id = data['agent_id']
+        cls.agent_status[agent_id] = time()
+
+    def agent_checker(cls):
+        cls.timer = Timer(cls.time_out, cls.agent_checker, args=(cls,))
+        cls.timer.start()
 
     def update_status(cls, data):
         pass
