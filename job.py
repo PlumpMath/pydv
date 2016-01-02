@@ -12,6 +12,9 @@ class JobEngine:
     agent_visitor = {}
     visitor_agent = {}
 
+    idle_agents = set()
+    reused_agents = set()
+
     agent_count = 0
 
     agent_md5 = hashlib.md5()
@@ -45,14 +48,17 @@ class JobEngine:
         else:
             @visitor
             def body():
-                while True:
-                    cls.process_msg()
-                    while len(cls.cmds) > 0 and (len(cls.pending_cmds) + len(cls.running_cmds)) < cls.max_cmds:
-                        v, cmd_spec = cls.cmds.pop()
-                        agent_id = cls.get_agent(v);
-                        cmd_spec['agent_id'] = agent_id
-                        cls.pending_cmds[agent_id] = cmd_spec
-                    yield from Scheduler.sleep()
+                try:
+                    while True:
+                        cls.process_msg()
+                        while len(cls.cmds) > 0 and (len(cls.pending_cmds) + len(cls.running_cmds)) < cls.max_cmds:
+                            v, cmd_spec = cls.cmds.pop()
+                            agent_id = cls.get_agent(v);
+                            cmd_spec['agent_id'] = agent_id
+                            cls.pending_cmds[agent_id] = cmd_spec
+                        yield from Scheduler.sleep()
+                except Exception as e:
+                    logger.error(e)
             cls.jobengine_visitor = body
 
     @classmethod
@@ -60,12 +66,16 @@ class JobEngine:
         if v in cls.visitor_agent:
             return cls.visitor_agent[v]
         else:
-            cls.agent_count += 1
-            cls.agent_md5.update(bytes(cls.agent_count))
-            agent_id = cls.agent_md5.hexdigest()
+            if len(cls.idle_agents) > 0:
+                agent_id = cls.idle_agents.pop()
+                cls.reused_agents.add(agent_id)
+            else:
+                cls.agent_count += 1
+                cls.agent_md5.update(bytes(cls.agent_count))
+                agent_id = cls.agent_md5.hexdigest()
+                GCFEngine.spawn_agent(agent_id)
             cls.visitor_agent[v] = agent_id
             cls.agent_visitor[agent_id] = v
-            GCFEngine.spawn_agent(agent_id)
             return agent_id
 
     @classmethod
@@ -90,7 +100,8 @@ class JobEngine:
                 len(cls.pending_cmds) > 0 or
                 len(cls.cmds) > 0 or
                 len(cls.agent_visitor) > 0 or
-                len(cls.visitor_agent) > 0)
+                len(cls.visitor_agent) > 0 or
+                len(cls.reused_agents) > 0)
 
     def require_cmd(cls, data):
         agent_id = data['agent_id']
@@ -101,6 +112,8 @@ class JobEngine:
             cmd_spec = cls.pending_cmds[agent_id]
             cmd_spec['logfile'] = path.join(cls.out_dir, 'cmds', agent_id)
             del cls.pending_cmds[agent_id]
+            if agent_id in cls.reused_agents:
+                cls.reused_agents.remove(agent_id)
             cls.running_cmds[agent_id] = cmd_spec
        
         out_data = marshal.dumps(cmd_spec)
@@ -122,7 +135,9 @@ class JobEngine:
                 else:
                     raise e
 
-        if agent_id not in cls.running_cmds:
+        if agent_id not in cls.running_cmds and agent_id not in cls.reused_agents:
+            if agent_id in cls.idle_agents:
+                cls.idle_agents.remove(agent_id)
             if agent_id in cls.agent_visitor:
                 GCFEngine.kill_agent(agent_id)
                 v = cls.agent_visitor[agent_id]
@@ -143,5 +158,6 @@ class JobEngine:
         cmd_spec['exitcode'] = data['exitcode']
         cmd_spec['errmsg']   = data['errmsg']
         del cls.running_cmds[agent_id]
+        cls.idle_agents.add(agent_id)
         Scheduler.wake(cls.agent_visitor[agent_id])
         
