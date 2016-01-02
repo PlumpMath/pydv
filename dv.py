@@ -45,7 +45,7 @@ def main():
     in_q  = Queue()
     out_q = Queue()
 
-    logger.info('dv.py started')
+    logger.info('running dv.py')
     # start agent server
     #loop = asyncio.get_event_loop()
     server_p = Process(target=start_agent_server, args=(in_q, out_q, path.abspath(opts.out_dir), opts.verbose,))
@@ -110,7 +110,7 @@ def main():
             logger.error('dv.py failed')
             #raise top.exception
         else:
-            logger.info('dv.py finished')
+            logger.info('dv.py passed')
     finally:
         cleanup()
 
