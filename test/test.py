@@ -22,7 +22,7 @@ def foo2(self):
     self.mixin(comp)
     @action(self)
     def build(self):
-        self.aaaaa()
+        yield from self.aaaaa()
 
 @suite()
 def aaa(self):
