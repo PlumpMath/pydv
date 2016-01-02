@@ -174,14 +174,15 @@ class JobEngine:
     def agent_checker(cls):
         for agent_id in cls.agent_status:
             if (time() - cls.agent_status[agent_id]) > cls.agent_time_out:
-                GCFEngine.kill_agent(agent_id)
-                cmd_spec = cls.running_cmds[agent_id]
-                v = cls.agent_visitor[agent_id]
-                del cls.visitor_agent[v]
-                del cls.agent_visitor[agent_id]
-                del cls.agent_status[agent_id]
-                del cls.running_cmds[agent_id]
-                cls.cmds.append(cmd_spec)
+                if agent_id in cls.running_cmds:
+                    GCFEngine.kill_agent(agent_id)
+                    cmd_spec = cls.running_cmds[agent_id]
+                    v = cls.agent_visitor[agent_id]
+                    del cls.visitor_agent[v]
+                    del cls.agent_visitor[agent_id]
+                    del cls.agent_status[agent_id]
+                    del cls.running_cmds[agent_id]
+                    cls.push_cmd(v, cmd_spec)
         cls.timer = Timer(cls.time_out, cls.agent_checker, args=(cls,))
         cls.timer.start()
 
