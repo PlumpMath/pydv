@@ -38,6 +38,12 @@ class Test(EntityBase):
          def run(self):
              pass
 
+     def clone(self, p):
+         p.body(self)
+
+     def my_suite(self):
+         return self.parent
+
 def test(parent=None):
     def f(body):
         t = Test(body, parent)

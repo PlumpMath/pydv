@@ -12,7 +12,7 @@ class Visitor:
                     res = yield from res
             except Exception as e:
                 self.exception = e
-                raise e
+                #raise e
             finally:
                 for i in self.waiters:
                     Scheduler.wake(i)

@@ -21,6 +21,10 @@ def aaa(self):
         self.need(foo)
         self.need(foo2)
 
+    @test(self)
+    def bar2(self):
+        self.clone(my_suite.bar)
+
 @suite()
 def aaa(self):
     @test(self)
