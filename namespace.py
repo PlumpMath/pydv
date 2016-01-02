@@ -30,14 +30,10 @@ def component(parent=None):
     def f(body):
         comp = Namespace(body, parent)
         if parent:
-            parent.add(body.__name__, comp)
+            if type(parent) == Namespace:
+                 parent.add(body.__name__, comp)
+            else:
+                 raise Exception('attempt to define component {} in non-component {}'.format(body.__name__, parent))
         return comp
     return f 
 
-def suite(parent=None):
-    def f(body):
-        s = Namespace(body, parent)
-        if parent:
-            parent.add(body.__name__, s)
-        return s
-    return f

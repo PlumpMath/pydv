@@ -14,7 +14,7 @@ def foo(self):
 def foo2(self):
     self.need(foo3)
 
-@component()
+@suite()
 def aaa(self):
     @test(self)
     def bar(self):

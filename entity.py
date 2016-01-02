@@ -4,6 +4,7 @@ from scheduler import Scheduler
 from types import GeneratorType
 from job import JobEngine
 from logger import logger
+from namespace import Namespace
 
 class EntityBase:
     
@@ -148,7 +149,10 @@ def entity(parent=None):
     def f(body):
         ntt = Entity(body, parent=parent)
         if parent:
-            parent.add(body.__name__, ntt)
+            if type(parent) == Namespace:
+                 parent.add(body.__name__, ntt)
+            else:
+                 raise Exception('attempt to define entity {} in non-component {}'.format(body.__name__, parent))
         return ntt
     return f
 
