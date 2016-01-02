@@ -40,7 +40,7 @@ class EntityBase:
             pass
         EntityBase.register_entity(self.fullname, self)
         
-    def add(self, name, action):
+    def add(self, name, action, org_action=None):
         self.__dict__[name] = action
         return action
 
@@ -48,7 +48,7 @@ class EntityBase:
         if not isinstance(ns, Namespace):
             raise Exception("attempt to maxin in non-namspace {}".format(ns))
         for n in ns().ns:
-            self.__dict__[n] = ns.ns[n]
+            self.__dict__[n] = types.MethodType(ns.ns[n], self)
     
     def initialize(self):
         if not self.initialized:
@@ -185,7 +185,7 @@ def action(parent=None):
                 logger.error('<- action {} failed'.format(fn))
                 raise e
         if parent:
-            parent.add(a.__name__, types.MethodType(na, parent))
+            parent.add(a.__name__, types.MethodType(na, parent), na)
             if a.__name__ == 'build':
                 def nna(*args, **kargs):
                     fn = 'build_self'

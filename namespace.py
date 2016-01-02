@@ -28,9 +28,10 @@ class Namespace:
             b = self.bodies.pop()
             b(self)
 
-    def add(self, name, body):
+    def add(self, name, body, org_body=None):
         self.__dict__[name] = body
-        self.ns[name] = body
+        if org_body:
+            self.ns[name] = org_body
         return body
 
 def component(parent=None):

@@ -14,7 +14,7 @@ def foo(self):
 def comp(self):
     @action(self)
     def aaaaa(self):
-        logger.info('aaaaaaaaaaa')
+        logger.info(self)
 
 @entity()
 def foo2(self):
