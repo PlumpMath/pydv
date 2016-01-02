@@ -35,7 +35,7 @@ class Test(EntityBase):
      def __init__(self, body, parent=None):
          super(Test, self).__init__(body, parent)
          @action(self)
-         def run():
+         def run(self):
              pass
 
 def test(parent=None):

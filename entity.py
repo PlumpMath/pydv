@@ -6,6 +6,7 @@ from job import JobEngine
 from logger import logger
 from namespace import Namespace
 from copy import copy
+import types
 
 class EntityBase:
     
@@ -35,9 +36,9 @@ class EntityBase:
         self.node.wait_on = set()
         needgraph.add_node(self.node)
         @action(self)
-        def build():
+        def build(self):
             pass
-        EntityBase.register_entity(self.name, self)
+        EntityBase.register_entity(self.fullname, self)
         
     def add(self, name, action):
         self.__dict__[name] = action
@@ -47,7 +48,7 @@ class EntityBase:
         if not isinstance(self, Namespace):
             raise Exception("attempt to maxin in non-namspace {}".format(ns))
         for n in ns.ns:
-            self.__dict__[n] = copy(ns.ns[n])
+            self.__dict__[n] = types.MethodType(ns.ns[n], self)
     
     def initialize(self):
         if not self.initialized:
@@ -184,7 +185,7 @@ def action(parent=None):
                 logger.error('<- action {} failed'.format(fn))
                 raise e
         if parent:
-            parent.add(a.__name__, na)
+            parent.add(a.__name__, types.MethodType(na, parent))
             if a.__name__ == 'build':
                 def nna(*args, **kargs):
                     fn = 'build_self'
@@ -200,7 +201,7 @@ def action(parent=None):
                     except Exception as e:
                         logger.info('<- action {} failed'.format(fn))
                         raise e
-                parent.add('build_self', nna)
+                parent.add('build_self', types.MethodType(nna, parent))
         return na
     return f
 

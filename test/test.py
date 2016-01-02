@@ -1,13 +1,13 @@
 @entity()
 def foo3(self):
     @action(self)
-    def build():
+    def build(self):
         yield from cmd("echo aaa")
 
 @entity()
 def foo(self):
     @action(self)
-    def build():
+    def build(self):
         yield from cmd('echo bbb')
 
 @entity()
