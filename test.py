@@ -30,6 +30,8 @@ def suite(parent=None):
 
 class Test(EntityBase):
 
+     test_status = {}
+
      def __init__(self, body, parent=None):
          super(Test, self).__init__(body, parent)
          @action(self)
@@ -58,11 +60,16 @@ def run_test(*ts, actions=[]):
                     Namespace.namespaces[sn]()
             @spawn(self)
             def b(tn=tn):
-                if tn in Suite.tests:
-                    t = Suite.tests[tn]()
-                    res = t.build()
-                    if type(res) == GeneratorType:
-                        res = yield from res
-                    return res
-                else:
-                    raise Exception('cannot find test {}'.format(tn))
+                try:
+                    if tn in Suite.tests:
+                        t = Suite.tests[tn]()
+                        res = t.build()
+                        if type(res) == GeneratorType:
+                            res = yield from res
+                        Test.test_status[tn] = 'passed'
+                        return res
+                    else:
+                        raise Exception('cannot find test {}'.format(tn))
+                except Exception as e:
+                    Test.test_status[tn] = 'failed'
+                    raise e

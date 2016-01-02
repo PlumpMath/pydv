@@ -20,7 +20,7 @@ from utils import require, get_ns
 from option import args_parse
 from logger import logger
 import event
-from test import run_test
+from test import run_test, Test
 
 server_p = None
 
@@ -102,6 +102,11 @@ def main():
                 next
             else:
                 break
+        for t in Test.test_status:
+            if Test.test_status[t] == 'passed':
+                logger.info("test '{}' passed".format(t))
+            else:
+                logger.error("test '{}' failed".format(t))
         if top.exception:
             def print_exception(e, indent=0):
                 if isinstance(e, Exception):
