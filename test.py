@@ -39,7 +39,7 @@ class Test(EntityBase):
              pass
 
      def clone(self, p):
-         p.body(self)
+         p().body(self)
 
      def my_suite(self):
          return self.parent

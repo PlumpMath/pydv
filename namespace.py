@@ -30,7 +30,7 @@ class Namespace:
 
     def add(self, name, body):
         self.__dict__[name] = body
-        self.ns[name] = copy(body)
+        self.ns[name] = body
         return body
 
 def component(parent=None):

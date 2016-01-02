@@ -44,11 +44,11 @@ class EntityBase:
         self.__dict__[name] = action
         return action
 
-    def maxin(self, ns):
-        if not isinstance(self, Namespace):
+    def mixin(self, ns):
+        if not isinstance(ns, Namespace):
             raise Exception("attempt to maxin in non-namspace {}".format(ns))
-        for n in ns.ns:
-            self.__dict__[n] = types.MethodType(ns.ns[n], self)
+        for n in ns().ns:
+            self.__dict__[n] = types.MethodType(ns.ns[n], self())
     
     def initialize(self):
         if not self.initialized:

@@ -10,9 +10,19 @@ def foo(self):
     def build(self):
         yield from cmd('echo bbb')
 
+@component()
+def comp(self):
+    @action(self)
+    def aaaaa(self):
+        logger.info('aaaaaaaaaaa')
+
 @entity()
 def foo2(self):
     self.need(foo3)
+    self.mixin(comp)
+    @action(self)
+    def build(self):
+        self.aaaaa()
 
 @suite()
 def aaa(self):
@@ -23,7 +33,7 @@ def aaa(self):
 
     @test(self)
     def bar2(self):
-        self.clone(my_suite.bar)
+        self.clone(self.parent.bar)
 
 @suite()
 def aaa(self):
