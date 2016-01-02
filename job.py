@@ -175,6 +175,7 @@ class JobEngine:
         for agent_id in cls.agent_status:
             if (time() - cls.agent_status[agent_id]) > cls.agent_time_out:
                 if agent_id in cls.running_cmds:
+                    logger.warning('agent {} time out and terminated'.format(agent_id))
                     GCFEngine.kill_agent(agent_id)
                     cmd_spec = cls.running_cmds[agent_id]
                     v = cls.agent_visitor[agent_id]

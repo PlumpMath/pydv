@@ -19,3 +19,6 @@ def bar(self):
     self.need(foo)
     self.need(foo2)
 
+@event.subscribe('dvpy_done')
+def body():
+    logger.info('finished')

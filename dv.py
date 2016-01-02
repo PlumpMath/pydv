@@ -19,6 +19,7 @@ from gcfengine import GCFEngine
 from utils import require, get_ns
 from option import args_parse
 from logger import logger
+import event
 
 server_p = None
 
@@ -112,6 +113,7 @@ def main():
         else:
             logger.info('dv.py passed')
     finally:
+        event.notify('dvpy_done')
         cleanup()
 
 if __name__ == '__main__':
