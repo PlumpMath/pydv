@@ -69,6 +69,9 @@ class JobEngine:
             if len(cls.idle_agents) > 0:
                 agent_id = cls.idle_agents.pop()
                 cls.reused_agents.add(agent_id)
+                vv = cls.agent_visitor[agent_id]
+                del cls.visitor_agent[vv]
+                del cls.agent_visitor[agent_id]
             else:
                 cls.agent_count += 1
                 cls.agent_md5.update(bytes(cls.agent_count))
@@ -96,12 +99,18 @@ class JobEngine:
 
     @classmethod
     def is_waiting(cls):
+        #print("running_cmds {}".format(cls.running_cmds))
+        #print("pending_cmds {}".format(cls.pending_cmds))
+        #print("cmds {}".format(cls.cmds))
+        #print("agent_visitor {}".format(cls.agent_visitor))
+        #print("visitor_agent {}".format(cls.visitor_agent))
+        #print("reused_agents{}".format(cls.reused_agents))
         return (len(cls.running_cmds) > 0 or
                 len(cls.pending_cmds) > 0 or
-                len(cls.cmds) > 0) # or
-                #len(cls.agent_visitor) > 0 or
-                #len(cls.visitor_agent) > 0 or
-                #len(cls.reused_agents) > 0)
+                len(cls.cmds) > 0 or
+                len(cls.agent_visitor) > 0 or
+                len(cls.visitor_agent) > 0 or
+                len(cls.reused_agents) > 0)
 
     def require_cmd(cls, data):
         agent_id = data['agent_id']
@@ -141,8 +150,8 @@ class JobEngine:
             if agent_id in cls.agent_visitor:
                 GCFEngine.kill_agent(agent_id)
                 v = cls.agent_visitor[agent_id]
-                del cls.agent_visitor[agent_id]
                 del cls.visitor_agent[v]
+                del cls.agent_visitor[agent_id]
 
     def heart_beart(cls, data):
         #print(data)
