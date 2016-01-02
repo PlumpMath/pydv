@@ -16,7 +16,7 @@ def foo2(self):
 
 @component()
 def aaa(self):
-    @entity(self)
+    @test(self)
     def bar(self):
         self.need(foo)
         self.need(foo2)

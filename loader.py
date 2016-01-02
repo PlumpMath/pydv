@@ -5,6 +5,7 @@ from os import environ
 from logger import logger
 import event
 from namespace import component, suite
+from test import test
 
 if 'DVPY_PRELOAD' in environ:
     for f  in environ['DVPY_PRELOAD'].split(':'):
