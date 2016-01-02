@@ -48,7 +48,7 @@ class EntityBase:
         if not isinstance(ns, Namespace):
             raise Exception("attempt to maxin in non-namspace {}".format(ns))
         for n in ns().ns:
-            self.__dict__[n] = types.MethodType(ns.ns[n], self())
+            self.__dict__[n] = ns.ns[n]
     
     def initialize(self):
         if not self.initialized:
