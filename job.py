@@ -98,10 +98,10 @@ class JobEngine:
     def is_waiting(cls):
         return (len(cls.running_cmds) > 0 or
                 len(cls.pending_cmds) > 0 or
-                len(cls.cmds) > 0 or
-                len(cls.agent_visitor) > 0 or
-                len(cls.visitor_agent) > 0 or
-                len(cls.reused_agents) > 0)
+                len(cls.cmds) > 0) # or
+                #len(cls.agent_visitor) > 0 or
+                #len(cls.visitor_agent) > 0 or
+                #len(cls.reused_agents) > 0)
 
     def require_cmd(cls, data):
         agent_id = data['agent_id']

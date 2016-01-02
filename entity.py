@@ -16,9 +16,10 @@ class EntityBase:
         else:
             cls.ntts[name] = ntt
             
-    def __init__(self, body):
+    def __init__(self, body, parent=None):
         self.name = body.__name__
         self.body = body
+        self.parent = parent
         self.needs = set()
         self.initialized = False
         self.node = Node(self.name)
@@ -136,13 +137,13 @@ class EntityBase:
 
 class Entity(EntityBase):
     
-    def __init__(self, body):
-        super(Entity, self).__init__(body)
+    def __init__(self, body, parent=None):
+        super(Entity, self).__init__(body, parent)
 
 
 def entity(parent=None):
     def f(body):
-        ntt = Entity(body)
+        ntt = Entity(body, parent=parent)
         return ntt
     return f
 
