@@ -1,16 +1,15 @@
 
 class Namespace:
 
-    suites = {}
+    namespaces = {}
 
     def __init__(self, body, parent=None):
         self.name = body.__name__
         self.fullname = self.name
         if parent:
             self.fullname = str(parent) + '.' + self.name
-        self.body = body
+        self.bodies = [body]
         self.parent = parent
-        self.initialized = False
 
     def __call__(self):
         self.initialize()
@@ -19,10 +18,13 @@ class Namespace:
     def __str__(self):
         return self.fullname
 
+    def add_body(self, b):
+        self.bodies.append(b)
+
     def initialize(self):
-        if not self.initialized:
-            self.initialized = True
-            self.body(self)
+        while len(self.bodies) > 0:
+            b = self.bodies.pop()
+            b(self)
 
     def add(self, name, body):
         self.__dict__[name] = body
@@ -30,12 +32,20 @@ class Namespace:
 
 def component(parent=None):
     def f(body):
-        comp = Namespace(body, parent)
+        fn = body.__name__
         if parent:
-            if type(parent) == Namespace:
-                 parent.add(body.__name__, comp)
-            else:
-                 raise Exception('attempt to define component {} in non-component {}'.format(body.__name__, parent))
+            fn = str(parent) + '.' + fn
+        if fn in Namespace.namespaces:
+            comp = Namespace.namespaces[fn]
+            comp.add_body(body)
+        else:
+            comp = Namespace(body, parent)
+            Namespace.namespaces[comp.fullname] = comp
+            if parent:
+                if type(parent) == Namespace:
+                     parent.add(body.__name__, comp)
+                else:
+                     raise Exception('attempt to define component {} in non-component {}'.format(body.__name__, parent))
         return comp
     return f 
 

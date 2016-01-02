@@ -21,6 +21,13 @@ def aaa(self):
         self.need(foo)
         self.need(foo2)
 
+@suite()
+def aaa(self):
+    @test(self)
+    def bar1(self):
+        self.need(foo)
+        self.need(foo2)
+
 @event.subscribe('dvpy_done')
 def body():
     logger.info('finished')

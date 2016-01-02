@@ -14,10 +14,17 @@ class Suite(Namespace):
 
 def suite(parent=None):
     def f(body):
-        s = Suite(body, parent)
-        Namespace.suites[s.fullname] = s
+        fn = body.__name__
         if parent:
-            parent.add(body.__name__, s)
+            fn = str(parent) + '.' + fn
+        if fn in Namespace.namespaces:
+            s = Namespace.namespaces[fn]
+            s.add_body(body)
+        else:
+            s = Suite(body, parent)
+            Namespace.namespaces[s.fullname] = s
+            if parent:
+                parent.add(body.__name__, s)
         return s
     return f
 
@@ -47,8 +54,8 @@ def run_test(*ts, actions=[]):
         for tn in ts:
             ps = tn.split('.')
             for sn in ps:
-                if sn in Namespace.suites:
-                    Namespace.suites[sn]()
+                if sn in Namespace.namespaces:
+                    Namespace.namespaces[sn]()
             @spawn(self)
             def b(tn=tn):
                 if tn in Suite.tests:
