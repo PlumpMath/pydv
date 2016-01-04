@@ -15,6 +15,7 @@ from scheduler import Scheduler
 from entity import entity, action, cmd
 from visitor import visitor, join, spawn
 from local import Local
+from lsf import LSF
 from gcfengine import GCFEngine
 from utils import require, get_ns
 from option import args_parse
@@ -61,7 +62,13 @@ def main():
         #logger.info("agent server started on {}:{}".format(host, port))
 
         # set gcf engine    
-        GCFEngine.set_imp(Local(host, port, path.abspath(opts.out_dir), opts.verbose))
+        if opts.gcf == 'local':
+            GCFEngine.set_imp(Local(host, port, path.abspath(opts.out_dir), opts.verbose))
+        else:
+            if opts.gcf == 'lsf':
+                GCFEngine.set_imp(LSF(host, port, path.abspath(opts.out_dir), opts.verbose))
+            else:
+                raise Exception('unsupported gcf engine {}'.format(opts.gcf))
     
         # config job engine
         JobEngine.connect(in_q, out_q)

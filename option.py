@@ -47,6 +47,8 @@ def args_parse():
                  help='specify action')
     p.add_option('-f', '--patchfile', action='append', dest='patchfile', type='string',
                  help='specify patch file')
+    p.add_option('-g', '--gcf', dest='gcf', type='string', default='local',
+                 help='specify gcf')
 
     (opts, args) = p.parse_args()
 
