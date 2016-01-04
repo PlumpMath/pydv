@@ -45,6 +45,8 @@ def args_parse():
                  help='specify test selector')
     p.add_option('-a', '--action', action='append', dest='action', type='string',
                  help='specify action')
+    p.add_option('-f', '--patchfile', action='append', dest='patchfile', type='string',
+                 help='specify patch file')
 
     (opts, args) = p.parse_args()
 

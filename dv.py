@@ -71,6 +71,9 @@ def main():
 
         # load files
         require('loader')
+        if opts.patchfile:
+            for f in opts.patchfile:
+                require(f)
 
         # evaluate experssions
         @visitor
