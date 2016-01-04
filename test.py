@@ -140,9 +140,6 @@ def get_test(*ts, where=None):
 def run_test(*ts, action=None, where=None):
     if action == None:
         action=['build']
-    wp = None
-    if where:
-        wp = parse_selector(where)[0]
     nts = get_test(*ts, where=where)
     @join
     def body(self):
@@ -150,9 +147,6 @@ def run_test(*ts, action=None, where=None):
             @spawn(self)
             def b(t=t):
                 try:
-                    if wp:
-                        if not wp(t):
-                            return None
                     res = None
                     for a in action:
                         res = getattr(t, a)()
