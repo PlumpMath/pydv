@@ -88,7 +88,7 @@ def main():
                 if opts.test:
                     @spawn(self)
                     def body():
-                        res = run_test(*opts.test)
+                        res = run_test(*opts.test, action=opts.action, where=opts.where)
                         if type(res) == GeneratorType:
                             yield from res
                         return res

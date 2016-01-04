@@ -39,6 +39,7 @@ def aaa(self):
 def aaa(self):
     @test(self)
     def bar1(self):
+        self.aaa = 'bbb'
         self.need(foo)
         self.need(foo2)
 

@@ -42,7 +42,9 @@ def args_parse():
     p.add_option('-t', '--test', action='callback', dest='test', type='string', callback=add_test,
                  help='specify test')
     p.add_option('-w', '--where', action='store', dest='where', type='string',
-                 help='sepcify test selector')
+                 help='specify test selector')
+    p.add_option('-a', '--action', action='append', dest='action', type='string',
+                 help='specify action')
 
     (opts, args) = p.parse_args()
 
