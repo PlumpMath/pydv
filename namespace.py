@@ -20,6 +20,13 @@ class Namespace:
     def __str__(self):
         return self.fullname
 
+    def mixin(self, ns):
+        if not isinstance(ns, Namespace):
+            raise Exception("attempt to maxin in non-namspace {}".format(ns))
+        for n in ns().ns:
+            self.__dict__[n] = types.MethodType(ns.ns[n], self)
+            self.ns[n] = self.__dict__[n]
+          
     def add_body(self, b):
         self.bodies.append(b)
 
@@ -34,7 +41,7 @@ class Namespace:
             self.ns[name] = org_body
         return body
 
-def component(parent=None):
+def namespace(parent=None):
     def f(body):
         fn = body.__name__
         if parent:

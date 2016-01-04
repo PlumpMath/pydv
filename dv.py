@@ -67,7 +67,7 @@ def main():
         JobEngine.connect(in_q, out_q)
         JobEngine.out_dir = path.abspath(opts.out_dir)
         logger.info('max agents = {}'.format(opts.max_agents))
-        JobEngine.max_cmds = int(opts.max_agents)
+        JobEngine.max_cmds = opts.max_agents
 
         # load files
         require('loader')

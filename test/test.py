@@ -10,7 +10,7 @@ def foo(self):
     def build(self):
         yield from cmd('echo bbb')
 
-@component()
+@namespace()
 def comp(self):
     @action(self)
     def aaaaa(self):
