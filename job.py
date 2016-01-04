@@ -39,7 +39,7 @@ class JobEngine:
 
     @classmethod
     def connect(cls, in_q, out_q):
-        cls.input_q = in_q
+        cls.input_q  = in_q
         cls.output_q = out_q
 
     @classmethod

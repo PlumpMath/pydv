@@ -74,7 +74,7 @@ class EntityBase:
         for v in self.node.waiters:
             Scheduler.wake(v)
 
-    def build_need(self):
+    def build_needs(self):
         n = self.node
         cv = Scheduler.current
         if n.color == 'black':
@@ -175,7 +175,7 @@ def action(parent=None):
             try:    
                 if a.__name__ == 'build':
                     if parent:
-                        yield from parent.build_need()
+                        yield from parent.build_needs()
                 res = a(*args, **kargs)
                 if type(res) == GeneratorType:
                     res = yield from res

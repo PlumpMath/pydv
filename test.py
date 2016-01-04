@@ -38,7 +38,7 @@ class Test(EntityBase):
          super(Test, self).__init__(body, parent)
          @action(self)
          def run(self):
-             pass
+             yield from self.build()
 
      def clone(self, p):
          p().body(self)
@@ -140,7 +140,7 @@ def get_test(*ts, where=None):
 
 def run_test(*ts, action=None, where=None):
     if action == None:
-        action=['build']
+        action=['run']
     nts = get_test(*ts, where=where)
     @join
     def body(self):
