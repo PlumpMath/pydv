@@ -109,9 +109,12 @@ def get_test(*ts, where=None):
     res = []
     for tn in ts:
         ps = tn.split('.')
+        st = []
         for sn in ps:
-            if sn in Namespace.namespaces:
-                Namespace.namespaces[sn]()
+            st.append(sn)
+            nsn = '.'.join(st)
+            if nsn in Namespace.namespaces:
+                Namespace.namespaces[nsn]()
         if re.search(reg, tn):
             ntn = re.sub(reg, '[^\.]+', tn)
             nreg = re.compile(ntn)
