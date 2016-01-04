@@ -60,22 +60,25 @@ def test(parent=None):
 
 def eval_simple(a, o, v):
     def f(self):
-        if hasattr(self, a):
-            nv = str(v)
-            av = str(getattr(self, a))
-            if o == '==':
-                return av == nv
-            else:
-                if o == '!=':
-                    return not (av == nv)
+        try:
+            if hasattr(self, a):
+                nv = str(v)
+                av = str(getattr(self, a))
+                if o == '==':
+                    return av == nv
                 else:
-                    if o == '=~':
-                        reg = reg.complie(nv)
-                        return re.search(reg, av)
+                    if o == '!=':
+                        return not (av == nv)
                     else:
-                        reg = reg.complie(nv)
-                        return not re.search(reg, av)
-        else:
+                        if o == '=~':
+                            reg = reg.complie(nv)
+                            return re.search(reg, av)
+                        else:
+                            reg = reg.complie(nv)
+                            return not re.search(reg, av)
+            else:
+                return False
+        except Exception as e:
             return False
     return f
 
@@ -98,37 +101,63 @@ def parse_selector(s):
         raise Exception("failed at parse '{}': {}".format(s, e))
     return p
 
+def get_test(*ts, where=None):
+    wp = None
+    if where:
+        wp = parse_selector(where)[0]
+    reg = re.compile("all")
+    res = []
+    for tn in ts:
+        ps = tn.split('.')
+        for sn in ps:
+            if sn in Namespace.namespaces:
+                Namespace.namespaces[sn]()
+        if re.search(reg, tn):
+            ntn = re.sub(reg, '[^\.]+', tn)
+            nreg = re.compile(ntn)
+            for tnn in Suite.tests:
+                if re.fullmatch(nreg, tnn):
+                    t = Suite.tests[tnn]()
+                    if wp and not wp(t):
+                        pass
+                    else:
+                        res.append(t)
+        else:
+            if tn in Suite.tests:
+                t = Suite.tests[tn]()
+                if wp and not wp(t):
+                    pass
+                else:
+                    res.append(t)
+            else:
+                raise Exception('cannot find test {}'.format(tn))
+    return res
+                
+
 def run_test(*ts, action=None, where=None):
     if action == None:
         action=['build']
     wp = None
     if where:
         wp = parse_selector(where)[0]
+    nts = get_test(*ts, where=where)
     @join
     def body(self):
-        for tn in ts:
-            ps = tn.split('.')
-            for sn in ps:
-                if sn in Namespace.namespaces:
-                    Namespace.namespaces[sn]()
+        for t in nts:
             @spawn(self)
-            def b(tn=tn):
+            def b(t=t):
                 try:
-                    if tn in Suite.tests:
-                        t = Suite.tests[tn]()
-                        if wp:
-                            if not wp(t):
-                                return None
-                        res = None
-                        for a in action:
-                            res = getattr(t, a)()
-                            if type(res) == GeneratorType:
-                                res = yield from res
-                            Test.test_status[tn] = 'passed'
-                        return res
-                    else:
-                        raise Exception('cannot find test {}'.format(tn))
+                    if wp:
+                        if not wp(t):
+                            return None
+                    res = None
+                    for a in action:
+                        res = getattr(t, a)()
+                        if type(res) == GeneratorType:
+                            res = yield from res
+                        Test.test_status[t.fullname] = 'passed'
+                    return res
                 except Exception as e:
-                    Test.test_status[tn] = 'failed'
+                    Test.test_status[t.fullname] = 'failed'
                     raise e
     yield from body()
