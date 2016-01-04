@@ -14,9 +14,11 @@ class Graph:
         self.graph.add_node(n)
 
     def add_edge(self, n0, n1):
+        self.graph.add_edge(n0, n1)
+
+    def check_cycle(self):
         if not nx.is_directed_acyclic_graph(self.graph):
             raise Exception("attempt to add a cyclic")
-        self.graph.add_edge(n0, n1)
 
     def subgraph(self, n):
         ns = nx.descendants(self.graph, n)

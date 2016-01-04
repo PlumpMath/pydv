@@ -35,13 +35,17 @@ def aaa(self):
     def bar2(self):
         self.clone(self.parent.bar)
 
+
+
 @suite()
 def aaa(self):
-    @test(self)
-    def bar1(self):
-        self.aaa = 'bbb'
-        self.need(foo)
-        self.need(foo2)
+    for i in range(10000):
+        exec("""
+@test(self)
+def bar_{}(self):
+    self.aaa = 'bbb'
+    self.need(foo)
+    self.need(foo2)""".format(i))
 
 @event.subscribe('dvpy_done')
 def body():

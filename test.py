@@ -1,4 +1,4 @@
-from entity import EntityBase
+from entity import EntityBase, Entity
 from namespace import Namespace
 from copy import copy
 from entity import action
@@ -32,19 +32,25 @@ def suite(parent=None):
 
 class Test(EntityBase):
 
-     test_status = {}
+    test_status = {}
 
-     def __init__(self, body, parent=None):
-         super(Test, self).__init__(body, parent)
-         @action(self)
-         def run(self):
-             yield from self.build()
+    def __init__(self, body, parent=None):
+        super(Test, self).__init__(body, parent)
+        @action(self)
+        def run(self):
+            yield from self.build()
 
-     def clone(self, p):
-         p().body(self)
+    def clone(self, p):
+        p().body(self)
 
-     def my_suite(self):
-         return self.parent
+    def my_suite(self):
+        return self.parent
+
+    def need(self, *ntts):
+        for n in ntts:
+            if type(n) != Entity:
+                raise Exception('attempt to need a non-entity {}:{}'.format(type(n), n))
+            super(Test, self).need(n)
 
 def test(parent=None):
     def f(body):

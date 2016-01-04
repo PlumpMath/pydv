@@ -152,6 +152,12 @@ class Entity(EntityBase):
     def __init__(self, body, parent=None):
         super(Entity, self).__init__(body, parent)
 
+    def need(self, *ntts):
+        for n in ntts:
+            if type(n) != Entity:
+                raise Exception('attempt to need a non-entity {}:{}'.format(type(n), n))
+            super(Entity, self).need(n)
+            needgraph.check_cycle()
 
 def entity(parent=None):
     def f(body):
