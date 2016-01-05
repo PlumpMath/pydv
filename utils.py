@@ -12,24 +12,26 @@ def get_ns():
 def require(file):
     """read in files"""
     if path.isabs(file):
-        b = path.basename(file)
-        p = path.abspath(path.join(file+'.py'))
+        p = path.abspath(file)
     else:
         l = str(traceback.extract_stack()[-1][0])
-        #r = re.compile('file (\S+),')
-        #m = r.search(l)
-        d = path.dirname(l) #m.group(1))
-        b = path.basename(file)
-        p = path.abspath(path.join(d, file+'.py'))
-    if path.exists(p):
-        if p not in included_files:
-            included_files.add(p)
-            #ldr = find_loader(b, p)
-            #ldr.load_module()
-            f = open(p)
-            c = f.read()
-            o = compile(c, p, 'exec')
-            exec(o, ns, ns)
-    else:
+        d = path.dirname(l)
+        p = path.abspath(path.join(d, file))
+    found = False
+    for ext in ['', '.dv', '.py']:
+        f = p+ext
+        if path.exists(f):
+            if f not in included_files:
+                included_files.add(f)
+                try:
+                    fh = open(f)
+                    c  = fh.read()
+                    o  = compile(c, p, 'exec')
+                    exec(o, ns, ns)
+                finally:
+                    fh.close()
+            found = True
+            break
+    if not found:
         raise Exception("cannot find " + file)
 
