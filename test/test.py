@@ -1,3 +1,5 @@
+require('test2.py')
+
 @entity()
 def foo3(self):
     @action(self)

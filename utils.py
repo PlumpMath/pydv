@@ -14,7 +14,7 @@ def require(file):
     if path.isabs(file):
         p = path.abspath(file)
     else:
-        l = str(traceback.extract_stack()[-1][0])
+        l = str(traceback.extract_stack()[-2][0])
         d = path.dirname(l)
         p = path.abspath(path.join(d, file))
     found = False
@@ -27,7 +27,7 @@ def require(file):
                     fh = open(f)
                     c  = fh.read()
                     o  = compile(c, p, 'exec')
-                    exec(o, ns, ns)
+                    exec(o, ns)
                 finally:
                     fh.close()
             found = True
